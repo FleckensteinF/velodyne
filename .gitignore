@@ -2,4 +2,5 @@
 *.tar.gz
 *~
 *.autosave
+doc
 TAGS
