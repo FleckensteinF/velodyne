@@ -27,6 +27,7 @@
 #include <math.h>
 
 #include <ros/ros.h>
+#include <tf/transform_listener.h>
 #include <pcl_ros/point_cloud.h>
 #include <velodyne_msgs/VelodyneScan.h>
 #include <velodyne_pointcloud/point_types.h>
@@ -131,17 +132,19 @@ namespace velodyne_rawdata
      *  begin:
      *
      *    - read device-specific angles calibration
+     *    - specify transform listener
      *
      *  @param private_nh private node handle for ROS parameters
+     *  @param tf_listener_ transform listener for transforming points
      *  @returns 0 if successful;
      *           errno value for failure
      */
-    int setup(ros::NodeHandle private_nh);
+    int setup(ros::NodeHandle private_nh, tf::TransformListener* tf_listener = NULL);
 
-    void unpack(const velodyne_msgs::VelodynePacket &pkt, VPointCloud &pc);
+    void unpack(const velodyne_msgs::VelodyneScan::ConstPtr &scanMsg, VPointCloud &pc);
     
     void setParameters(double min_range, double max_range, double view_direction,
-                       double view_width);
+                       double view_width, const std::string& frame_id = "");
 
   private:
 
@@ -152,6 +155,7 @@ namespace velodyne_rawdata
       double min_range;                ///< minimum range to publish
       int min_angle;                   ///< minimum angle to publish
       int max_angle;                   ///< maximum angle to publish
+      std::string frame_id;            ///< frame in which to transform points
       
       double tmp_min_angle;
       double tmp_max_angle;
@@ -165,8 +169,11 @@ namespace velodyne_rawdata
     float sin_rot_table_[ROTATION_MAX_UNITS];
     float cos_rot_table_[ROTATION_MAX_UNITS];
     
+    tf::TransformListener* tf_listener_;
+    
     /** add private function to handle the VLP16 **/ 
-    void unpack_vlp16(const velodyne_msgs::VelodynePacket &pkt, VPointCloud &pc);
+    void unpack_vlp16(const velodyne_msgs::VelodyneScan::ConstPtr &scanMsg, 
+                      VPointCloud &pc);
 
     /** in-line test whether a point is in range */
     bool pointInRange(float range)

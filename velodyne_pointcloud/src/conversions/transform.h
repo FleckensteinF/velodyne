@@ -11,7 +11,7 @@
 /** @file
 
     This class transforms raw Velodyne 3D LIDAR packets to PointCloud2
-    in the /odom frame of reference.
+    in a given frame of reference.
 
 */
 
@@ -68,12 +68,6 @@ namespace velodyne_pointcloud
     tf::MessageFilter<velodyne_msgs::VelodyneScan> *tf_filter_;
     ros::Publisher output_;
     tf::TransformListener listener_;
-
-    /// configuration parameters
-    typedef struct {
-      std::string frame_id;          ///< target frame ID
-    } Config;
-    Config config_;
 
     // Point cloud buffers for collecting points within a packet.  The
     // inPc_ and tfPc_ are class members only to avoid reallocation on

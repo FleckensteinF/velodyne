@@ -25,7 +25,6 @@ namespace velodyne_pointcloud
   {
     data_->setup(private_nh);
 
-
     // advertise output point cloud (before subscribing to input data)
     output_ =
       node.advertise<sensor_msgs::PointCloud2>("velodyne_points", 10);
@@ -47,7 +46,7 @@ namespace velodyne_pointcloud
   void Convert::callback(velodyne_pointcloud::CloudNodeConfig &config,
                 uint32_t level)
   {
-  ROS_INFO("Reconfigure Request");
+  ROS_INFO("Reconfigure request.");
   data_->setParameters(config.min_range, config.max_range, config.view_direction,
                        config.view_width);
   }
@@ -66,14 +65,11 @@ namespace velodyne_pointcloud
     outMsg->header.frame_id = scanMsg->header.frame_id;
     outMsg->height = 1;
 
-    // process each packet provided by the driver
-    for (size_t i = 0; i < scanMsg->packets.size(); ++i)
-      {
-        data_->unpack(scanMsg->packets[i], *outMsg);
-      }
+    // process all packets provided by the driver
+    data_->unpack(scanMsg, *outMsg);
 
     // publish the accumulated cloud message
-    ROS_DEBUG_STREAM("Publishing " << outMsg->height * outMsg->width
+    ROS_DEBUG_STREAM("Publishing " << outMsg->width  << " x " << outMsg->height
                      << " Velodyne points, time: " << outMsg->header.stamp);
     output_.publish(outMsg);
   }
