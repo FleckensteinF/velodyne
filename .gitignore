@@ -2,5 +2,7 @@
 *.tar.gz
 *~
 *.autosave
+*.user
+.gitignore.*
 doc
 TAGS
