@@ -116,7 +116,7 @@ namespace velodyne_rawdata
     return 0;
   }
 
-/** @brief convert raw Velodyne message to point cloud
+  /** @brief convert raw Velodyne message to point cloud
    *
    *  @param scanMsg raw Velodyne scan message
    *  @param pc shared pointer to organized point cloud
@@ -305,7 +305,7 @@ namespace velodyne_rawdata
               } catch (std::exception& ex) {
                 // only log tf error once every 100 times
                 ROS_WARN_THROTTLE(100, "%s", ex.what());
-                continue; // skip this point
+                continue;                   // skip this point
               }
             }
             
@@ -533,7 +533,7 @@ namespace velodyne_rawdata
                 } catch (std::exception& ex) {
                   // only log tf error once every 100 times
                   ROS_WARN_THROTTLE(100, "%s", ex.what());
-                  continue; // skip this point
+                  continue;                   // skip this point
                 }
               }
               
