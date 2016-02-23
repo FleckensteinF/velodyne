@@ -2,4 +2,7 @@
 *.tar.gz
 *~
 *.user
+*.gitignore*
+*.orig
+doc
 TAGS
