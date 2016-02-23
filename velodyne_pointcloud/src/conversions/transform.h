@@ -54,6 +54,11 @@ namespace velodyne_pointcloud
 
   private:
 
+    /** @brief Callback for raw scan messages.
+     *
+     *  @pre TF message filter has already waited until the transform to
+     *       the configured @c frame_id can succeed.
+     */
     void processScan(const velodyne_msgs::VelodyneScan::ConstPtr &scanMsg);
 
     ///Pointer to dynamic reconfigure service srv_

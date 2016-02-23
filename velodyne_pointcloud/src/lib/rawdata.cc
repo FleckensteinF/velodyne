@@ -116,11 +116,6 @@ namespace velodyne_rawdata
     return 0;
   }
 
-  /** @brief convert raw Velodyne message to point cloud
-   *
-   *  @param scanMsg raw Velodyne scan message
-   *  @param pc shared pointer to organized point cloud
-   */
   void RawData::unpack(const velodyne_msgs::VelodyneScan::ConstPtr &scanMsg,
                        VPointCloud &pc)
   {
@@ -136,9 +131,7 @@ namespace velodyne_rawdata
     // Define dimensions of organized output point cloud and fill it with NaN.
     pc.width  = scanMsg->packets.size() * SCANS_PER_PACKET / calibration_.num_lasers;
     pc.height = calibration_.num_lasers;
-    VPoint nan;
-    nan.x = nan.y = nan.z = std::numeric_limits<float>::infinity();
-    pc.points.assign(pc.width * pc.height, nan);
+    pc.points.resize(pc.width * pc.height);
     
     // Set the output point cloud frame ID.
     if (tf_listener_ == NULL || config_.frame_id.empty())
@@ -283,9 +276,28 @@ namespace velodyne_rawdata
             intensity = (intensity < min_intensity) ? min_intensity : intensity;
             intensity = (intensity > max_intensity) ? max_intensity : intensity;
     
+            // append this point to the cloud
+            VPoint point;
+            point.x = point.y = point.z = std::numeric_limits<float>::infinity();
+            point.intensity = 0u;
+            point.ring = corrections.laser_ring;
+            
+            int col = n_points / calibration_.num_lasers;
+            int row = calibration_.num_lasers-1 - point.ring;
+            pc.at(col, row) = point;            
+            n_points++;   // Increase point counter.
+            
             if (!pointInRange(distance))
               continue;
-            
+
+            if (tf_listener_ == NULL || config_.frame_id.empty()) {
+              pc.at(col, row).x         = x_coord;
+              pc.at(col, row).y         = y_coord;
+              pc.at(col, row).z         = z_coord;
+              pc.at(col, row).intensity = (uint8_t)intensity;
+              continue;
+            }
+              
             // If given transform listener, transform point from sensor frame
             // to target frame.
             geometry_msgs::PointStamped g_point;
@@ -297,41 +309,27 @@ namespace velodyne_rawdata
             g_point.point.y         = y_coord;
             g_point.point.z         = z_coord;
             
-            if (!(tf_listener_ == NULL || config_.frame_id.empty())) {
-              try {
-                ROS_DEBUG_STREAM("transforming from " << g_point.header.frame_id
-                                 << " to " << config_.frame_id);
-                tf_listener_->transformPoint(config_.frame_id, g_point, g_point);
-              } catch (std::exception& ex) {
-                // only log tf error once every 100 times
-                ROS_WARN_THROTTLE(100, "%s", ex.what());
-                continue;                   // skip this point
-              }
+            try {
+              ROS_DEBUG_STREAM("transforming from " << g_point.header.frame_id
+                               << " to " << config_.frame_id);
+              tf_listener_->transformPoint(config_.frame_id, g_point, g_point);
+            } catch (std::exception& ex) {
+              // only log tf error once every 100 times
+              ROS_WARN_THROTTLE(100, "%s", ex.what());
+              continue;                   // skip this point
             }
             
-            // append this point to the cloud
-            VPoint point;
-            point.ring      = corrections.laser_ring;
-            point.x         = g_point.point.x;
-            point.y         = g_point.point.y;
-            point.z         = g_point.point.z;
-            point.intensity = (uint8_t) intensity;
-  
-            int col = n_points / calibration_.num_lasers;
-            int row = calibration_.num_lasers-1 - point.ring;
-            pc.at(col, row) = point;
-            n_points++;   // Increase point counter.
+            pc.at(col, row).x         = g_point.point.x;
+            pc.at(col, row).y         = g_point.point.y;
+            pc.at(col, row).z         = g_point.point.z;
+            pc.at(col, row).intensity = (uint8_t)intensity;
           }
         }
       }
     }
   }
   
-  /** @brief convert raw VLP16 message to point cloud
-   *
-   *  @param scanMsg raw Velodyne scan message
-   *  @param pc shared pointer to point cloud (points are appended)
-   */
+
   void RawData::unpack_vlp16(const velodyne_msgs::VelodyneScan::ConstPtr &scanMsg,
                              VPointCloud &pc)
   {   
@@ -346,9 +344,7 @@ namespace velodyne_rawdata
     // Define dimensions of organized output point cloud.
     pc.width  = scanMsg->packets.size() * BLOCKS_PER_PACKET * VLP16_FIRINGS_PER_BLOCK;
     pc.height = calibration_.num_lasers;
-    VPoint nan;
-    nan.x = nan.y = nan.z = std::numeric_limits<float>::infinity();
-      pc.points.assign(pc.width * pc.height, nan);
+    pc.points.resize(pc.width * pc.height);
 
     // Set the output point cloud frame ID.
     if (tf_listener_ == NULL || config_.frame_id.empty())
@@ -374,10 +370,16 @@ namespace velodyne_rawdata
           return;                         // bad packet: skip the rest
         }
   
+        // Calculate the index step to the next block with new azimuth value.
+        // The index step depends on whether the sensor runs in single or 
+        // dual return mode.
+        const bool dual_return = (raw->status[PACKET_STATUS_SIZE-2] == 0x39);
+        int i_diff = 1 + (int)dual_return;
+        
         // Calculate difference between current and next block's azimuth angle.
         azimuth = (float)(raw->blocks[block].rotation);
-        if (block < (BLOCKS_PER_PACKET-1)){
-          azimuth_diff = (float)((36000 + raw->blocks[block+1].rotation - raw->blocks[block].rotation)%36000);
+        if (block < (BLOCKS_PER_PACKET-i_diff)){
+          azimuth_diff = (float)((36000 + raw->blocks[block+i_diff].rotation - raw->blocks[block].rotation)%36000);
           last_azimuth_diff = azimuth_diff;
         }else{
           azimuth_diff = last_azimuth_diff;
@@ -507,48 +509,57 @@ namespace velodyne_rawdata
               intensity = (intensity < min_intensity) ? min_intensity : intensity;
               intensity = (intensity > max_intensity) ? max_intensity : intensity;
       
-              if (!pointInRange(distance)) 
+              // append this point to the cloud
+              VPoint point;
+              point.x = point.y = point.z = std::numeric_limits<float>::infinity();
+              point.intensity = 0u;
+              point.ring = corrections.laser_ring;
+              
+              int col = n_points / calibration_.num_lasers;
+              int row = calibration_.num_lasers-1 - point.ring;
+              pc.at(col, row) = point;
+              n_points++;   // Increase point counter.      
+              
+              if (!pointInRange(distance))
                 continue;
-      
+  
+              if (tf_listener_ == NULL || config_.frame_id.empty()) {
+                pc.at(col, row).x         = x_coord;
+                pc.at(col, row).y         = y_coord;
+                pc.at(col, row).z         = z_coord;
+                pc.at(col, row).intensity = (uint8_t)intensity;
+                continue;
+              }
+                
               // Calculate time of firing the packet's first beam in [s].
               const float pkt_duration = 1.0e-6 * 
                   BLOCKS_PER_PACKET * VLP16_BLOCK_TDURATION;
               const ros::Time t_pkt_start(pkt.stamp 
                                           - ros::Duration(0.5*pkt_duration));
               
-              // If a transformer is given, transform point from sensor 
-              // to target frame at exact beam firing time.
-              geometry_msgs::PointStamped g_point;
+              // If given transform listener, transform point from sensor frame
+              // to target frame.
+              geometry_msgs::PointStamped g_point;             
               g_point.header.stamp    = t_pkt_start + ros::Duration(t_beam*1.0e-6);
               g_point.header.frame_id = scanMsg->header.frame_id;
               g_point.point.x         = x_coord;
               g_point.point.y         = y_coord;
               g_point.point.z         = z_coord;
               
-              if (!(tf_listener_ == NULL || config_.frame_id.empty())) {
-                try {
-                  ROS_DEBUG_STREAM("transforming from " << g_point.header.frame_id
-                                   << " to " << config_.frame_id);
-                  tf_listener_->transformPoint(config_.frame_id, g_point, g_point);
-                } catch (std::exception& ex) {
-                  // only log tf error once every 100 times
-                  ROS_WARN_THROTTLE(100, "%s", ex.what());
-                  continue;                   // skip this point
-                }
+              try {
+                ROS_DEBUG_STREAM("transforming from " << g_point.header.frame_id
+                                 << " to " << config_.frame_id);
+                tf_listener_->transformPoint(config_.frame_id, g_point, g_point);
+              } catch (std::exception& ex) {
+                // only log tf error once every 100 times
+                ROS_WARN_THROTTLE(100, "%s", ex.what());
+                continue;                   // skip this point
               }
               
-              // append this point to the cloud
-              VPoint point;
-              point.ring = corrections.laser_ring;
-              point.x = g_point.point.x;
-              point.y = g_point.point.y;
-              point.z = g_point.point.z;
-              point.intensity = (uint8_t) intensity;
-  
-              int col = n_points / calibration_.num_lasers;
-              int row = calibration_.num_lasers-1 - point.ring;
-              pc.at(col, row) = point;
-              n_points++;   // Increase point counter.
+              pc.at(col, row).x         = g_point.point.x;
+              pc.at(col, row).y         = g_point.point.y;
+              pc.at(col, row).z         = g_point.point.z;
+              pc.at(col, row).intensity = (uint8_t)intensity;
             }
           }
         }

@@ -56,11 +56,11 @@ namespace velodyne_rawdata
   static const float DISTANCE_RESOLUTION = 0.002f; /**< meters */
   static const float DISTANCE_MAX_UNITS = (DISTANCE_MAX
                                            / DISTANCE_RESOLUTION + 1.0);
+  
   /** @todo make this work for both big and little-endian machines */
   static const uint16_t UPPER_BANK = 0xeeff;
   static const uint16_t LOWER_BANK = 0xddff;
-  
-  
+   
   /** Special Defines for VLP16 support **/
   static const int    VLP16_FIRINGS_PER_BLOCK =   2;
   static const int    VLP16_SCANS_PER_FIRING  =  16;
@@ -117,6 +117,7 @@ namespace velodyne_rawdata
     uint16_t revolution;
     uint8_t status[PACKET_STATUS_SIZE]; 
   } raw_packet_t;
+  
 
   /** \brief Velodyne data conversion class */
   class RawData
@@ -141,6 +142,11 @@ namespace velodyne_rawdata
      */
     int setup(ros::NodeHandle private_nh, tf::TransformListener* tf_listener = NULL);
 
+    /** @brief convert raw Velodyne message to point cloud
+     *
+     *  @param scanMsg raw Velodyne scan message
+     *  @param pc shared pointer to organized point cloud
+     */
     void unpack(const velodyne_msgs::VelodyneScan::ConstPtr &scanMsg, VPointCloud &pc);
     
     void setParameters(double min_range, double max_range, double view_direction,
@@ -171,7 +177,11 @@ namespace velodyne_rawdata
     
     tf::TransformListener* tf_listener_;
     
-    /** add private function to handle the VLP16 **/ 
+    /** @brief convert raw VLP16 message to point cloud
+     *
+     *  @param scanMsg raw Velodyne scan message
+     *  @param pc shared pointer to point cloud (points are appended)
+     */
     void unpack_vlp16(const velodyne_msgs::VelodyneScan::ConstPtr &scanMsg, 
                       VPointCloud &pc);
 
