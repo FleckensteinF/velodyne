@@ -4,5 +4,6 @@
 *.autosave
 *.user
 .gitignore.*
+*.orig
 doc
 TAGS
