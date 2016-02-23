@@ -63,7 +63,7 @@ namespace velodyne_rawdata
     config_.tmp_max_angle = fmod(fmod(config_.tmp_max_angle,2*M_PI) + 2*M_PI,2*M_PI);
     
     //converting into the hardware velodyne ref (negative yaml and degrees)
-    //adding 0.5 perfomrs a centered double to int conversion 
+    //adding 0.5 performs a centered double to int conversion 
     config_.min_angle = 100 * (2*M_PI - config_.tmp_min_angle) * 180 / M_PI + 0.5;
     config_.max_angle = 100 * (2*M_PI - config_.tmp_max_angle) * 180 / M_PI + 0.5;
     if (config_.min_angle == config_.max_angle)
@@ -73,8 +73,11 @@ namespace velodyne_rawdata
       config_.max_angle = 36000;
     }
     
-    config_.frame_id = frame_id;  
-    ROS_INFO_STREAM("Target frame ID: " << config_.frame_id);    
+    const std::string last_frame_id = config_.frame_id;
+    config_.frame_id = frame_id;
+    if (!config_.frame_id.empty() 
+        && config_.frame_id != last_frame_id)
+      ROS_INFO_STREAM("Target frame ID: " << config_.frame_id);
   }
 
   /** Set up for on-line operation. */
@@ -108,15 +111,15 @@ namespace velodyne_rawdata
       sin_rot_table_[rot_index] = sinf(rotation);
     }
     
-    tf_listener_  = tf_listener;
+    tf_listener_ = tf_listener;
     
     return 0;
   }
 
-  /** @brief convert raw Velodyne message to point cloud
+/** @brief convert raw Velodyne message to point cloud
    *
    *  @param scanMsg raw Velodyne scan message
-   *  @param pc shared pointer to point cloud (points are appended)
+   *  @param pc shared pointer to organized point cloud
    */
   void RawData::unpack(const velodyne_msgs::VelodyneScan::ConstPtr &scanMsg,
                        VPointCloud &pc)
@@ -130,7 +133,21 @@ namespace velodyne_rawdata
       return;
     }
     
+    // Define dimensions of organized output point cloud and fill it with NaN.
+    pc.width  = scanMsg->packets.size() * SCANS_PER_PACKET / calibration_.num_lasers;
+    pc.height = calibration_.num_lasers;
+    VPoint nan;
+    nan.x = nan.y = nan.z = std::numeric_limits<float>::infinity();
+    pc.points.assign(pc.width * pc.height, nan);
+    
+    // Set the output point cloud frame ID.
+    if (tf_listener_ == NULL || config_.frame_id.empty())
+      pc.header.frame_id = scanMsg->header.frame_id;
+    else
+      pc.header.frame_id = config_.frame_id;
+    
     // process each packet provided by the driver
+    int n_points = 0;    // Number of points read.
     for (size_t next = 0; next < scanMsg->packets.size(); ++next) {
       const velodyne_msgs::VelodynePacket& pkt = scanMsg->packets[next];
       const raw_packet_t *raw = (const raw_packet_t *) &pkt.data[0];
@@ -280,7 +297,7 @@ namespace velodyne_rawdata
             g_point.point.y         = y_coord;
             g_point.point.z         = z_coord;
             
-            if (tf_listener_ != NULL) {
+            if (!(tf_listener_ == NULL || config_.frame_id.empty())) {
               try {
                 ROS_DEBUG_STREAM("transforming from " << g_point.header.frame_id
                                  << " to " << config_.frame_id);
@@ -288,7 +305,7 @@ namespace velodyne_rawdata
               } catch (std::exception& ex) {
                 // only log tf error once every 100 times
                 ROS_WARN_THROTTLE(100, "%s", ex.what());
-                continue;                   // skip this point
+                continue; // skip this point
               }
             }
             
@@ -300,9 +317,10 @@ namespace velodyne_rawdata
             point.z         = g_point.point.z;
             point.intensity = (uint8_t) intensity;
   
-            pc.points.push_back(point);
-            ++pc.width;
-            pc.header.frame_id = g_point.header.frame_id;
+            int col = n_points / calibration_.num_lasers;
+            int row = calibration_.num_lasers-1 - point.ring;
+            pc.at(col, row) = point;
+            n_points++;   // Increase point counter.
           }
         }
       }
@@ -324,8 +342,22 @@ namespace velodyne_rawdata
     int azimuth_corrected;
     float x, y, z;
     float intensity;
+    
+    // Define dimensions of organized output point cloud.
+    pc.width  = scanMsg->packets.size() * BLOCKS_PER_PACKET * VLP16_FIRINGS_PER_BLOCK;
+    pc.height = calibration_.num_lasers;
+    VPoint nan;
+    nan.x = nan.y = nan.z = std::numeric_limits<float>::infinity();
+      pc.points.assign(pc.width * pc.height, nan);
 
+    // Set the output point cloud frame ID.
+    if (tf_listener_ == NULL || config_.frame_id.empty())
+      pc.header.frame_id = scanMsg->header.frame_id;
+    else
+      pc.header.frame_id = config_.frame_id;
+      
     // process each packet provided by the driver
+    int n_points = 0;    // Number of points read.
     for (size_t next = 0; next < scanMsg->packets.size(); ++next) {
       const velodyne_msgs::VelodynePacket& pkt = scanMsg->packets[next];
       const raw_packet_t *raw = (const raw_packet_t *) &pkt.data[0];
@@ -493,7 +525,7 @@ namespace velodyne_rawdata
               g_point.point.y         = y_coord;
               g_point.point.z         = z_coord;
               
-              if (tf_listener_ != NULL) {              
+              if (!(tf_listener_ == NULL || config_.frame_id.empty())) {
                 try {
                   ROS_DEBUG_STREAM("transforming from " << g_point.header.frame_id
                                    << " to " << config_.frame_id);
@@ -501,7 +533,7 @@ namespace velodyne_rawdata
                 } catch (std::exception& ex) {
                   // only log tf error once every 100 times
                   ROS_WARN_THROTTLE(100, "%s", ex.what());
-                  continue;                   // skip this point
+                  continue; // skip this point
                 }
               }
               
@@ -513,9 +545,10 @@ namespace velodyne_rawdata
               point.z = g_point.point.z;
               point.intensity = (uint8_t) intensity;
   
-              pc.points.push_back(point);
-              ++pc.width;
-              pc.header.frame_id = g_point.header.frame_id;
+              int col = n_points / calibration_.num_lasers;
+              int row = calibration_.num_lasers-1 - point.ring;
+              pc.at(col, row) = point;
+              n_points++;   // Increase point counter.
             }
           }
         }

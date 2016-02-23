@@ -25,6 +25,7 @@ namespace velodyne_pointcloud
   {
     data_->setup(private_nh);
 
+
     // advertise output point cloud (before subscribing to input data)
     output_ =
       node.advertise<sensor_msgs::PointCloud2>("velodyne_points", 10);
@@ -62,13 +63,11 @@ namespace velodyne_pointcloud
       outMsg(new velodyne_rawdata::VPointCloud());
     // outMsg's header is a pcl::PCLHeader, convert it before stamp assignment
     outMsg->header.stamp = pcl_conversions::toPCL(scanMsg->header).stamp;
-    outMsg->header.frame_id = scanMsg->header.frame_id;
-    outMsg->height = 1;
 
     // process all packets provided by the driver
     data_->unpack(scanMsg, *outMsg);
 
-    // publish the accumulated cloud message
+    // publish the cloud message
     ROS_DEBUG_STREAM("Publishing " << outMsg->width  << " x " << outMsg->height
                      << " Velodyne points, time: " << outMsg->header.stamp);
     output_.publish(outMsg);
