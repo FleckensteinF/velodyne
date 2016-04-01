@@ -47,10 +47,16 @@ catkin_package(
     INCLUDE_DIRS include
     LIBRARIES velodyne_rawdata)
     
-#add_executable(dynamic_reconfigure_node src/dynamic_reconfigure_node.cpp)
-#target_link_libraries(dynamic_reconfigure_node
-#   ${catkin_LIBRARIES}
-# )
+# Set the build type.
+if (NOT CMAKE_BUILD_TYPE)
+  set(CMAKE_BUILD_TYPE Release CACHE STRING
+      "Choose type of build: None | Debug | Release | RelWithDebInfo | MinSizeRel"
+      FORCE)
+endif (NOT CMAKE_BUILD_TYPE)
+message(STATUS "CMake build type: ${CMAKE_BUILD_TYPE}")
+
+string(TOUPPER ${CMAKE_BUILD_TYPE} CMAKE_BUILD_TYPE_TOUPPER)
+message(STATUS "Compiler flags: ${CMAKE_CXX_FLAGS} ${CMAKE_CXX_FLAGS_${CMAKE_BUILD_TYPE_TOUPPER}}")
 
 add_subdirectory(src/lib)
 add_subdirectory(src/conversions)
