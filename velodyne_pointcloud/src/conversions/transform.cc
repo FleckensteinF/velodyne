@@ -40,7 +40,7 @@ namespace velodyne_pointcloud
     tf_filter_ =
       new tf::MessageFilter<velodyne_msgs::VelodyneScan>(velodyne_scan_,
                                                          listener_,
-                                                         "", 10);
+                                                         "", 10); // target_frame will be set in reconfigure_callback
     
     // Set up dynamic reconfiguration.
     srv_ = boost::make_shared <dynamic_reconfigure::Server<velodyne_pointcloud::
