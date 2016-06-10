@@ -9,6 +9,7 @@
   <author>Jack O'Quin</author>
   <author>Piyush Khandelwal</author>
   <author>Jesse Vera</author>
+  <author>Alexander Schaefer</author>
   <license>BSD</license>
   <url type="website">http://ros.org/wiki/velodyne_pointcloud</url>
   <url type="repository">https://github.com/ros-drivers/velodyne</url>
