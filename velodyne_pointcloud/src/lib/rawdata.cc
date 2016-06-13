@@ -521,7 +521,7 @@ namespace velodyne_rawdata
 
               // Insert this point into the cloud.
               SPoint point;
-              point.azimuth = azimuth_corrected;
+              point.azimuth = (azimuth_corrected_f * M_PI) / 18000.0f; // Valid range: [0; +2*pi).
               point.elevation = corrections.vert_correction;
               point.range = distance;
               point.x = point.y = point.z = std::numeric_limits<float>::infinity();
