@@ -14,6 +14,7 @@
  *  @author Jesse Vera
  *  @author Jack O'Quin
  *  @author Piyush Khandelwal
+ *  @author Alexander Schaefer
  */
 
 #ifndef __VELODYNE_POINTCLOUD_POINT_TYPES_H
@@ -32,6 +33,16 @@ namespace velodyne_pointcloud
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW     // ensure proper alignment
   } EIGEN_ALIGN16;
 
+  // Euclidean coordinate, spherical coordinate, intensity and ring number.
+  struct SphericalPoint
+  {
+      float x, y, z;
+      float azimuth, elevation, range;
+      float intensity;
+      uint16_t ring;
+      EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+  } EIGEN_ALIGN16;
+
 }; // namespace velodyne_pointcloud
 
 
@@ -39,6 +50,16 @@ POINT_CLOUD_REGISTER_POINT_STRUCT(velodyne_pointcloud::PointXYZIR,
                                   (float, x, x)
                                   (float, y, y)
                                   (float, z, z)
+                                  (float, intensity, intensity)
+                                  (uint16_t, ring, ring))
+
+POINT_CLOUD_REGISTER_POINT_STRUCT(velodyne_pointcloud::SphericalPoint,
+                                  (float, x, x)
+                                  (float, y, y)
+                                  (float, z, z)
+                                  (float, azimuth, azimuth)
+                                  (float, elevation, elevation)
+                                  (float, range, range)
                                   (float, intensity, intensity)
                                   (uint16_t, ring, ring))
 

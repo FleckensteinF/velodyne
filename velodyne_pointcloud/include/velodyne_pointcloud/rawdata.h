@@ -38,6 +38,8 @@ namespace velodyne_rawdata
   // Shorthand typedefs for point cloud representations
   typedef velodyne_pointcloud::PointXYZIR VPoint;
   typedef pcl::PointCloud<VPoint> VPointCloud;
+  typedef velodyne_pointcloud::SphericalPoint SPoint;
+  typedef pcl::PointCloud<SPoint> SPointCloud;
 
   /**
    * Raw Velodyne packet constants and structures.
@@ -56,18 +58,18 @@ namespace velodyne_rawdata
   static const float DISTANCE_RESOLUTION = 0.002f; /**< meters */
   static const float DISTANCE_MAX_UNITS = (DISTANCE_MAX
                                            / DISTANCE_RESOLUTION + 1.0);
-  
+
   /** @todo make this work for both big and little-endian machines */
   static const uint16_t UPPER_BANK = 0xeeff;
   static const uint16_t LOWER_BANK = 0xddff;
-   
+
   /** Special Defines for VLP16 support **/
   static const int    VLP16_FIRINGS_PER_BLOCK =   2;
   static const int    VLP16_SCANS_PER_FIRING  =  16;
   static const float  VLP16_BLOCK_TDURATION   = 110.592f;   // [µs]
   static const float  VLP16_DSR_TOFFSET       =   2.304f;   // [µs]
   static const float  VLP16_FIRING_TOFFSET    =  55.296f;   // [µs]
-  
+
 
   /** \brief Raw Velodyne data block.
    *
@@ -115,9 +117,9 @@ namespace velodyne_rawdata
   {
     raw_block_t blocks[BLOCKS_PER_PACKET];
     uint16_t revolution;
-    uint8_t status[PACKET_STATUS_SIZE]; 
+    uint8_t status[PACKET_STATUS_SIZE];
   } raw_packet_t;
-  
+
 
   /** \brief Velodyne data conversion class */
   class RawData
@@ -147,8 +149,8 @@ namespace velodyne_rawdata
      *  @param scanMsg raw Velodyne scan message
      *  @param pc shared pointer to organized point cloud
      */
-    void unpack(const velodyne_msgs::VelodyneScan::ConstPtr &scanMsg, VPointCloud &pc);
-    
+    void unpack(const velodyne_msgs::VelodyneScan::ConstPtr &scanMsg, SPointCloud &pc);
+
     void setParameters(double min_range, double max_range, double view_direction,
                        double view_width, const std::string& frame_id = "");
 
@@ -162,28 +164,28 @@ namespace velodyne_rawdata
       int min_angle;                   ///< minimum angle to publish
       int max_angle;                   ///< maximum angle to publish
       std::string frame_id;            ///< frame in which to transform points
-      
+
       double tmp_min_angle;
       double tmp_max_angle;
     } Config;
     Config config_;
 
-    /** 
+    /**
      * Calibration file
      */
     velodyne_pointcloud::Calibration calibration_;
     float sin_rot_table_[ROTATION_MAX_UNITS];
     float cos_rot_table_[ROTATION_MAX_UNITS];
-    
+
     tf::TransformListener* tf_listener_;
-    
+
     /** @brief convert raw VLP16 message to point cloud
      *
      *  @param scanMsg raw Velodyne scan message
      *  @param pc shared pointer to point cloud (points are appended)
      */
-    void unpack_vlp16(const velodyne_msgs::VelodyneScan::ConstPtr &scanMsg, 
-                      VPointCloud &pc);
+    void unpack_vlp16(const velodyne_msgs::VelodyneScan::ConstPtr &scanMsg,
+                      SPointCloud &pc);
 
     /** in-line test whether a point is in range */
     bool pointInRange(float range)

@@ -1,5 +1,5 @@
 /**
- * \file  calibration.h 
+ * \file  calibration.h
  *
  * \author  Piyush Khandelwal (piyushk@cs.utexas.edu)
  * Copyright (C) 2012, Austin Robot Technology, University of Texas at Austin
@@ -19,7 +19,7 @@ namespace velodyne_pointcloud {
 
   /** \brief correction values for a single laser
    *
-   * Correction values for a single laser (as provided by db.xml from veleodyne)
+   * Correction values for a single laser (as provided by db.xml from Velodyne)
    * Includes parameters for Velodyne HDL-64E S2.1 calibration.
    * http://velodynelidar.com/lidar/products/manual/63-HDL64E%20S2%20Manual_Rev%20D_2011_web.pdf
    **/
@@ -67,7 +67,7 @@ namespace velodyne_pointcloud {
     void read(const std::string& calibration_file);
     void write(const std::string& calibration_file);
   };
-  
+
 } /* velodyne_pointcloud */
 
 

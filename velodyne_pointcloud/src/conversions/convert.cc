@@ -29,7 +29,7 @@ namespace velodyne_pointcloud
     // advertise output point cloud (before subscribing to input data)
     output_ =
       node.advertise<sensor_msgs::PointCloud2>("velodyne_points", 10);
-      
+
     srv_ = boost::make_shared <dynamic_reconfigure::Server<velodyne_pointcloud::
       CloudNodeConfig> > (private_nh);
     dynamic_reconfigure::Server<velodyne_pointcloud::CloudNodeConfig>::
@@ -43,7 +43,7 @@ namespace velodyne_pointcloud
                      &Convert::processScan, (Convert *) this,
                      ros::TransportHints().tcpNoDelay(true));
   }
-  
+
   void Convert::callback(velodyne_pointcloud::CloudNodeConfig &config,
                 uint32_t level)
   {
@@ -59,7 +59,7 @@ namespace velodyne_pointcloud
       return;                                     // avoid much work
 
     // allocate a point cloud with same time and frame ID as raw data
-    velodyne_rawdata::VPointCloud::Ptr outMsg(new velodyne_rawdata::VPointCloud());
+    velodyne_rawdata::SPointCloud::Ptr outMsg(new velodyne_rawdata::SPointCloud());
     // outMsg's header is a pcl::PCLHeader, convert it before stamp assignment
     outMsg->header.stamp = pcl_conversions::toPCL(scanMsg->header).stamp;
 

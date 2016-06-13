@@ -117,7 +117,7 @@ namespace velodyne_rawdata
   }
 
   void RawData::unpack(const velodyne_msgs::VelodyneScan::ConstPtr &scanMsg,
-                       VPointCloud &pc)
+                       SPointCloud &pc)
   {
     ROS_DEBUG_STREAM("Received Velodyne message, time: " << scanMsg->header.stamp);
 
@@ -277,7 +277,8 @@ namespace velodyne_rawdata
             intensity = (intensity > max_intensity) ? max_intensity : intensity;
 
             // append this point to the cloud
-            VPoint point;
+            SPoint point;
+            point.azimuth = point.elevation = point.range = std::numeric_limits<float>::quiet_NaN();
             point.x = point.y = point.z = std::numeric_limits<float>::infinity();
             point.intensity = 0u;
             point.ring = corrections.laser_ring;
@@ -331,7 +332,7 @@ namespace velodyne_rawdata
 
 
   void RawData::unpack_vlp16(const velodyne_msgs::VelodyneScan::ConstPtr &scanMsg,
-                             VPointCloud &pc)
+                             SPointCloud &pc)
   {
     float azimuth;
     float azimuth_diff; // azimuth(N+2)-azimuth(N) with N ... number of firing in packet
@@ -344,7 +345,8 @@ namespace velodyne_rawdata
     // Initialize the organized output point cloud.
     pc.width  = scanMsg->packets.size() * BLOCKS_PER_PACKET * VLP16_FIRINGS_PER_BLOCK;
     pc.height = calibration_.num_lasers;
-    VPoint nan_point;
+    SPoint nan_point;
+    nan_point.azimuth = nan_point.elevation = nan_point.range = std::numeric_limits<float>::quiet_NaN();
     nan_point.x = nan_point.y = nan_point.z = std::numeric_limits<float>::quiet_NaN();
     nan_point.intensity = 0u;
     nan_point.ring = -1;
@@ -495,7 +497,6 @@ namespace velodyne_rawdata
                */
               z = distance_y * sin_vert_angle + vert_offset*cos_vert_angle;
 
-
               /** Use standard ROS coordinate system (right-hand rule) */
               float x_coord = y;
               float y_coord = -x;
@@ -517,7 +518,10 @@ namespace velodyne_rawdata
               intensity = (intensity > max_intensity) ? max_intensity : intensity;
 
               // Insert this point into the cloud.
-              VPoint point;
+              SPoint point;
+              point.azimuth = azimuth_corrected;
+              point.elevation = corrections.vert_correction;
+              point.range = distance;
               point.x = point.y = point.z = std::numeric_limits<float>::infinity();
               point.intensity = 0u;
               point.ring = corrections.laser_ring;
