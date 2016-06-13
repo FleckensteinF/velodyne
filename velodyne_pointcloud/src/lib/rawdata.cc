@@ -236,7 +236,7 @@ namespace velodyne_rawdata
              * model we used.
              */
             xy_distance = distance_x * cos_vert_angle + vert_offset * sin_vert_angle ;
-            ///the expression wiht '-' is proved to be better than the one with '+'
+            ///the expression with '-' is proved to be better than the one with '+'
             x = xy_distance * sin_rot_angle - horiz_offset * cos_rot_angle;
 
             float distance_y = distance + distance_corr_y;
@@ -278,7 +278,9 @@ namespace velodyne_rawdata
 
             // append this point to the cloud
             SPoint point;
-            point.azimuth = point.elevation = point.range = std::numeric_limits<float>::quiet_NaN();
+            point.azimuth = corrections.rot_correction;
+            point.elevation = corrections.vert_correction;
+            point.range = distance;
             point.x = point.y = point.z = std::numeric_limits<float>::infinity();
             point.intensity = 0u;
             point.ring = corrections.laser_ring;
