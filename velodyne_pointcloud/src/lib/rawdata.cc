@@ -278,9 +278,9 @@ namespace velodyne_rawdata
 
             // append this point to the cloud
             SPoint point;
-            point.azimuth = corrections.rot_correction;
+            point.azimuth = -corrections.rot_correction;
             point.elevation = corrections.vert_correction;
-            point.range = distance;
+            point.radius = distance;
             point.x = point.y = point.z = std::numeric_limits<float>::infinity();
             point.intensity = 0u;
             point.ring = corrections.laser_ring;
@@ -348,7 +348,7 @@ namespace velodyne_rawdata
     pc.width  = scanMsg->packets.size() * BLOCKS_PER_PACKET * VLP16_FIRINGS_PER_BLOCK;
     pc.height = calibration_.num_lasers;
     SPoint nan_point;
-    nan_point.azimuth = nan_point.elevation = nan_point.range = std::numeric_limits<float>::quiet_NaN();
+    nan_point.azimuth = nan_point.elevation = nan_point.radius = std::numeric_limits<float>::quiet_NaN();
     nan_point.x = nan_point.y = nan_point.z = std::numeric_limits<float>::quiet_NaN();
     nan_point.intensity = 0u;
     nan_point.ring = -1;
@@ -521,9 +521,9 @@ namespace velodyne_rawdata
 
               // Insert this point into the cloud.
               SPoint point;
-              point.azimuth = (azimuth_corrected_f * M_PI) / 18000.0f; // Valid range: [0; +2*pi).
+              point.azimuth = -(azimuth_corrected_f * M_PI) / 18000.0f;
               point.elevation = corrections.vert_correction;
-              point.range = distance;
+              point.radius = distance;
               point.x = point.y = point.z = std::numeric_limits<float>::infinity();
               point.intensity = 0u;
               point.ring = corrections.laser_ring;

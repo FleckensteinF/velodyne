@@ -37,7 +37,7 @@ namespace velodyne_pointcloud
   struct SphericalPoint
   {
       float x, y, z;
-      float azimuth, elevation, range;
+      float azimuth, elevation, radius;
       float intensity;
       uint16_t ring;
       EIGEN_MAKE_ALIGNED_OPERATOR_NEW
@@ -59,7 +59,7 @@ POINT_CLOUD_REGISTER_POINT_STRUCT(velodyne_pointcloud::SphericalPoint,
                                   (float, z, z)
                                   (float, azimuth, azimuth)
                                   (float, elevation, elevation)
-                                  (float, range, range)
+                                  (float, radius, radius)
                                   (float, intensity, intensity)
                                   (uint16_t, ring, ring))
 
