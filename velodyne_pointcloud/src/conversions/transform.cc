@@ -25,8 +25,9 @@ namespace velodyne_pointcloud
 {
   /** @brief Constructor. */
   Transform::Transform(ros::NodeHandle node, ros::NodeHandle private_nh):
-    data_(new velodyne_rawdata::RawData()),
-    tf_prefix_(tf::getPrefixParam(private_nh))
+    tf_prefix_(tf::getPrefixParam(private_nh)),
+    data_(new velodyne_rawdata::RawData())
+    
   {
     data_->setup(private_nh, &listener_);
        
@@ -39,7 +40,7 @@ namespace velodyne_pointcloud
     tf_filter_ =
       new tf::MessageFilter<velodyne_msgs::VelodyneScan>(velodyne_scan_,
                                                          listener_,
-                                                         "", 10);
+                                                         "", 10); // target_frame will be set in reconfigure_callback
     
     // Set up dynamic reconfiguration.
     srv_ = boost::make_shared <dynamic_reconfigure::Server<velodyne_pointcloud::
