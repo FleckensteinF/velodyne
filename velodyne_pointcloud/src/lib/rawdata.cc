@@ -280,7 +280,7 @@ namespace velodyne_rawdata
             SPoint point;
             point.azimuth = -corrections.rot_correction;
             point.elevation = corrections.vert_correction;
-            point.radius = distance >= 1.0f ? distance : std::numeric_limits<float>::quiet_NaN();
+            point.radius = pointInRange(distance) ? distance : std::numeric_limits<float>::quiet_NaN();
             point.x = point.y = point.z = std::numeric_limits<float>::quiet_NaN();
             point.intensity = 0u;
             point.ring = corrections.laser_ring;
@@ -525,7 +525,7 @@ namespace velodyne_rawdata
               point.elevation = corrections.vert_correction;
               // According to the VLP-16 manual, distance measurements < 1 m
               // shall be discarded.
-              point.radius = distance >= 1.0f ? distance : std::numeric_limits<float>::quiet_NaN();
+              point.radius = pointInRange(distance) ? distance : std::numeric_limits<float>::quiet_NaN();
               point.x = point.y = point.z = std::numeric_limits<float>::quiet_NaN();
               point.intensity = 0u;
               point.ring = corrections.laser_ring;
