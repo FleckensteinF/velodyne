@@ -42,6 +42,7 @@ private:
   {
     std::string frame_id;            ///< tf frame ID
     std::string model;               ///< device model name
+    bool   dual_return;              ///< Dual return enabled
     int    npackets;                 ///< number of packets to collect
     double rpm;                      ///< device rotation rate (RPMs)
   } config_;

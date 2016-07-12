@@ -63,21 +63,30 @@ VelodyneDriver::VelodyneDriver(ros::NodeHandle node,
       ROS_ERROR_STREAM("unknown Velodyne LIDAR model: " << config_.model);
       packet_rate = 2600.0;
     }
-  std::string deviceName(std::string("Velodyne ") + model_full_name);
 
+  // Double packet rate for dual return
+  private_nh.param("dual_return", config_.dual_return, false);
+  packet_rate = (config_.dual_return) ? 2*packet_rate : packet_rate;
+
+  // Packets per point cloud
   private_nh.param("rpm", config_.rpm, 600.0);
-  ROS_INFO_STREAM(deviceName << " rotating at " << config_.rpm << " RPM");
-  double frequency = (config_.rpm / 60.0);     // expected Hz rate
+  double frequency = (config_.rpm / 60.0);     // Turns per second
+  config_.npackets = (int) ceil(packet_rate / frequency); // Minimum amount of packets for a scan with range >= 360 degrees.
+  private_nh.getParam("npackets", config_.npackets); // Possibility to override npackets
 
-  // default number of packets for each scan is a single revolution
-  // (fractions rounded up)
-  config_.npackets = (int) ceil(packet_rate / frequency);
-  private_nh.getParam("npackets", config_.npackets);
-  ROS_INFO_STREAM("publishing " << config_.npackets << " packets per scan");
+  // Output configuration information
+  std::string deviceName(std::string("Velodyne ") + model_full_name);
+  ROS_INFO_STREAM(deviceName << " rotating at " << config_.rpm << " RPM.");
+  if (config_.dual_return) {
+    ROS_INFO("Dual return enabled.");
+  } else {
+    ROS_INFO("Dual return disabled.");
+  }
+  ROS_INFO_STREAM("Accumulating " << config_.npackets << " packets per point cloud.");
 
+  // Configure pcap and UDP port
   std::string dump_file;
   private_nh.param("pcap", dump_file, std::string(""));
-
   int udp_port;
   private_nh.param("port", udp_port, (int)UDP_PORT_NUMBER);
 
