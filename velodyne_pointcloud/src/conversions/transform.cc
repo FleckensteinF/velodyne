@@ -71,7 +71,7 @@ namespace velodyne_pointcloud
       return;                                     // avoid much work
 
     // allocate an output point cloud with same time as raw data
-    velodyne_rawdata::SPointCloud::Ptr outMsg(new velodyne_rawdata::SPointCloud());
+    velodyne_pointcloud::SPointCloud::Ptr outMsg(new velodyne_pointcloud::SPointCloud());
 
     // outMsg's header is a pcl::PCLHeader, convert it before stamp assignment
     outMsg->header.stamp = pcl_conversions::toPCL(scanMsg->header).stamp;

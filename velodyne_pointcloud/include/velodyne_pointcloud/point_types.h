@@ -43,6 +43,12 @@ namespace velodyne_pointcloud
       EIGEN_MAKE_ALIGNED_OPERATOR_NEW
   } EIGEN_ALIGN16;
 
+  // Shorthand typedefs for point cloud representations
+  typedef PointXYZIR VPoint;
+  typedef pcl::PointCloud<VPoint> VPointCloud;
+  typedef SphericalPoint SPoint;
+  typedef pcl::PointCloud<SPoint> SPointCloud;
+
 }; // namespace velodyne_pointcloud
 
 
@@ -62,6 +68,10 @@ POINT_CLOUD_REGISTER_POINT_STRUCT(velodyne_pointcloud::SphericalPoint,
                                   (float, radius, radius)
                                   (float, intensity, intensity)
                                   (uint16_t, ring, ring))
+
+
+
+
 
 #endif // __VELODYNE_POINTCLOUD_POINT_TYPES_H
 

@@ -35,11 +35,6 @@
 
 namespace velodyne_rawdata
 {
-  // Shorthand typedefs for point cloud representations
-  typedef velodyne_pointcloud::PointXYZIR VPoint;
-  typedef pcl::PointCloud<VPoint> VPointCloud;
-  typedef velodyne_pointcloud::SphericalPoint SPoint;
-  typedef pcl::PointCloud<SPoint> SPointCloud;
 
   /**
    * Raw Velodyne packet constants and structures.
@@ -149,7 +144,7 @@ namespace velodyne_rawdata
      *  @param scanMsg raw Velodyne scan message
      *  @param pc shared pointer to organized point cloud
      */
-    void unpack(const velodyne_msgs::VelodyneScan::ConstPtr &scanMsg, SPointCloud &pc);
+    void unpack(const velodyne_msgs::VelodyneScan::ConstPtr &scanMsg, velodyne_pointcloud::SPointCloud &pc);
 
     void setParameters(double min_range, double max_range, double view_direction,
                        double view_width, const std::string& frame_id = "");
@@ -185,7 +180,7 @@ namespace velodyne_rawdata
      *  @param pc shared pointer to point cloud (points are appended)
      */
     void unpack_vlp16(const velodyne_msgs::VelodyneScan::ConstPtr &scanMsg,
-                      SPointCloud &pc);
+                      velodyne_pointcloud::SPointCloud &pc);
 
     /** in-line test whether a point is in range */
     bool pointInRange(float range)

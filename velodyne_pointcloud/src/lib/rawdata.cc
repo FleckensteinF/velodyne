@@ -42,6 +42,8 @@ namespace velodyne_rawdata
   //
   ////////////////////////////////////////////////////////////////////////
 
+  using namespace velodyne_pointcloud;
+
   RawData::RawData() {}
 
   /** Update parameters: conversions and update */
