@@ -16,3 +16,8 @@ from source, check out the ``rosbuild`` branch instead of ``master``.
 .. _ROS: http://www.ros.org
 .. _Velodyne: http://www.ros.org/wiki/velodyne
 .. _`Velodyne high definition 3D LIDARs`: http://www.velodynelidar.com/lidar/lidar.aspx
+
+
+Required packages
+========
+sudo apt-get install libpcap-dev
