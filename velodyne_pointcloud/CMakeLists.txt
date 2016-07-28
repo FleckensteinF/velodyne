@@ -37,15 +37,18 @@ if(NOT ${YAML_CPP_VERSION} VERSION_LESS "0.5")
 add_definitions(-DHAVE_NEW_YAMLCPP)
 endif(NOT ${YAML_CPP_VERSION} VERSION_LESS "0.5")
 
-include_directories(include ${catkin_INCLUDE_DIRS} 
-  ${dynamic_reconfigure_PACKAGE_PATH}/cmake/cfgbuild.cmake
-)
-
 catkin_package(
     CATKIN_DEPENDS ${${PROJECT_NAME}_CATKIN_DEPS}
     DEPENDS yaml-cpp python-yaml
     INCLUDE_DIRS include
-    LIBRARIES velodyne_rawdata)
+    LIBRARIES velodyne_rawdata
+)
+
+include_directories(
+  include
+  ${catkin_INCLUDE_DIRS} 
+  ${dynamic_reconfigure_PACKAGE_PATH}/cmake/cfgbuild.cmake
+)
     
 # Set the build type.
 if (NOT CMAKE_BUILD_TYPE)
