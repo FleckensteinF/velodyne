@@ -44,7 +44,7 @@ namespace velodyne_rawdata
 
   using namespace velodyne_pointcloud;
 
-  RawData::RawData() {}
+  RawData::RawData() : tf_listener_(NULL) {}
 
   /** Update parameters: conversions and update */
   void RawData::setParameters(double min_range,
