@@ -42,7 +42,7 @@ namespace velodyne_rawdata
   //
   ////////////////////////////////////////////////////////////////////////
 
-  RawData::RawData() {}
+  RawData::RawData() : tf_listener_(NULL) {}
 
   /** Update parameters: conversions and update */
   void RawData::setParameters(double min_range,
