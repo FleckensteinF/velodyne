@@ -280,8 +280,8 @@ namespace velodyne_rawdata
 
             // append this point to the cloud
             SPoint point;
-            point.azimuth = -corrections.rot_correction;
-            point.elevation = corrections.vert_correction;
+            point.azimuth = -std::atan2(y_coord, x_coord);
+            point.elevation = std::atan2(z_coord, std::sqrt(x_coord*x_coord + y_coord*y_coord));
             point.radius = pointInRange(distance) ? distance : std::numeric_limits<float>::quiet_NaN();
             point.x = point.y = point.z = std::numeric_limits<float>::quiet_NaN();
             point.intensity = 0u;
