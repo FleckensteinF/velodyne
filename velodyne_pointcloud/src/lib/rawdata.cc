@@ -284,7 +284,7 @@ namespace velodyne_rawdata
             point.elevation = std::atan2(z_coord, std::sqrt(x_coord*x_coord + y_coord*y_coord));
             point.radius = pointInRange(distance) ? distance : std::numeric_limits<float>::quiet_NaN();
             point.x = point.y = point.z = std::numeric_limits<float>::quiet_NaN();
-            point.intensity = 0u;
+            point.intensity = 0.0f;
             point.ring = corrections.laser_ring;
 
             int col = n_points / calibration_.num_lasers;
@@ -299,7 +299,7 @@ namespace velodyne_rawdata
               pc.at(col, row).x         = x_coord;
               pc.at(col, row).y         = y_coord;
               pc.at(col, row).z         = z_coord;
-              pc.at(col, row).intensity = (uint8_t)intensity;
+              pc.at(col, row).intensity = intensity;
               continue;
             }
 
@@ -327,7 +327,7 @@ namespace velodyne_rawdata
             pc.at(col, row).x         = g_point.point.x;
             pc.at(col, row).y         = g_point.point.y;
             pc.at(col, row).z         = g_point.point.z;
-            pc.at(col, row).intensity = (uint8_t)intensity;
+            pc.at(col, row).intensity = intensity;
           }
         }
       }
