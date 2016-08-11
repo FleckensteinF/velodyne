@@ -8,13 +8,10 @@
  */
 
 /** @file
-
     This class transforms raw Velodyne 3D LIDAR packets to PointCloud2
     in a given frame of reference.
-
     @author Jack O'Quin
     @author Jesse Vera
-
 */
 
 #include "transform.h"
@@ -88,3 +85,4 @@ namespace velodyne_pointcloud
   }
 
 } // namespace velodyne_pointcloud
+

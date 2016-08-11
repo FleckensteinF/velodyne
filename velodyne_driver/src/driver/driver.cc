@@ -55,7 +55,7 @@ VelodyneDriver::VelodyneDriver(ros::NodeHandle node,
     }
   else if (config_.model == "VLP16")
     {
-      packet_rate = 781.25;             // 300000 / 384
+      packet_rate = 754;             // 754 Packets/Second for Last or Strongest mode 1508 for dual (VLP-16 User Manual)
       model_full_name = "VLP-16";
     }
   else
@@ -63,33 +63,24 @@ VelodyneDriver::VelodyneDriver(ros::NodeHandle node,
       ROS_ERROR_STREAM("unknown Velodyne LIDAR model: " << config_.model);
       packet_rate = 2600.0;
     }
-
-  // Double packet rate for dual return
-  private_nh.param("dual_return", config_.dual_return, false);
-  packet_rate = (config_.dual_return) ? 2*packet_rate : packet_rate;
-
-  // Packets per point cloud
-  private_nh.param("rpm", config_.rpm, 600.0);
-  double frequency = (config_.rpm / 60.0);     // Turns per second
-  config_.npackets = (int) ceil(packet_rate / frequency); // Minimum amount of packets for a scan with range >= 360 degrees.
-  private_nh.getParam("npackets", config_.npackets); // Possibility to override npackets
-
-  // Output configuration information
   std::string deviceName(std::string("Velodyne ") + model_full_name);
-  ROS_INFO_STREAM(deviceName << " rotating at " << config_.rpm << " RPM.");
-  if (config_.dual_return) {
-    ROS_INFO("Dual return enabled.");
-  } else {
-    ROS_INFO("Dual return disabled.");
-  }
-  ROS_INFO_STREAM("Accumulating " << config_.npackets << " packets per point cloud.");
 
-  // Configure pcap and UDP port
+  private_nh.param("rpm", config_.rpm, 600.0);
+  ROS_INFO_STREAM(deviceName << " rotating at " << config_.rpm << " RPM");
+  double frequency = (config_.rpm / 60.0);     // expected Hz rate
+
+  // default number of packets for each scan is a single revolution
+  // (fractions rounded up)
+  config_.npackets = (int) ceil(packet_rate / frequency);
+  private_nh.getParam("npackets", config_.npackets);
+  ROS_INFO_STREAM("publishing " << config_.npackets << " packets per scan");
+
   std::string dump_file;
   private_nh.param("pcap", dump_file, std::string(""));
+
   int udp_port;
-  private_nh.param("port", udp_port, (int)UDP_PORT_NUMBER);
-  
+  private_nh.param("port", udp_port, (int) DATA_PORT_NUMBER);
+
   // Initialize dynamic reconfigure
   srv_ = boost::make_shared <dynamic_reconfigure::Server<velodyne_driver::
     VelodyneNodeConfig> > (private_nh);
@@ -113,25 +104,21 @@ VelodyneDriver::VelodyneDriver(ros::NodeHandle node,
                                         TimeStampStatusParam()));
 
   // open Velodyne input device or file
-  if (dump_file != "")
+  if (dump_file != "")                  // have PCAP file?
     {
-      input_.reset(new velodyne_driver::InputPCAP(private_nh,
-                                                  packet_rate,
-                                                  dump_file));
+      // read data from packet capture file
+      input_.reset(new velodyne_driver::InputPCAP(private_nh, udp_port,
+                                                  packet_rate, dump_file));
     }
   else
     {
+      // read data from live socket
       input_.reset(new velodyne_driver::InputSocket(private_nh, udp_port));
     }
 
-  std::string devip;
-  private_nh.param("device_ip", devip, std::string(""));
-  if(!devip.empty())
-    ROS_INFO_STREAM("Set device ip to " << devip << ", only accepting packets from this address." );
-  input_->setDeviceIP(devip);
-
-  // raw data output topic
-  output_ = node.advertise<velodyne_msgs::VelodyneScan>("velodyne_packets", 10);
+  // raw packet output topic
+  output_ =
+    node.advertise<velodyne_msgs::VelodyneScan>("velodyne_packets", 10);
 }
 
 /** poll the device

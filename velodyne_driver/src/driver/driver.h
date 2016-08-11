@@ -39,11 +39,11 @@ public:
 
 private:
 
-  // Callback for dynamic reconfigure
+  ///Callback for dynamic reconfigure
   void callback(velodyne_driver::VelodyneNodeConfig &config,
               uint32_t level);
 
-  // Pointer to dynamic reconfigure service srv_
+  ///Pointer to dynamic reconfigure service srv_
   boost::shared_ptr<dynamic_reconfigure::Server<velodyne_driver::
               VelodyneNodeConfig> > srv_;
 
@@ -52,7 +52,6 @@ private:
   {
     std::string frame_id;            ///< tf frame ID
     std::string model;               ///< device model name
-    bool   dual_return;              ///< Dual return enabled
     int    npackets;                 ///< number of packets to collect
     double rpm;                      ///< device rotation rate (RPMs)
     double time_offset;              ///< time in seconds added to each velodyne time stamp
