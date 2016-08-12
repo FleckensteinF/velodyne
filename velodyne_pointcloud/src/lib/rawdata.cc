@@ -306,7 +306,7 @@ namespace velodyne_rawdata
             geometry_msgs::PointStamped g_point;
             /// \todo Use the exact beam firing time for transforming points,
             ///       not the average time stamp of the whole block.
-            g_point.header.stamp    = pkt.stamp;
+            g_point.header.stamp    = pkt.stamp - ros::Duration(0.5*PACKET_DELAY*1.0e-6);
             g_point.header.frame_id = scanMsg->header.frame_id;
             g_point.point.x         = x_coord;
             g_point.point.y         = y_coord;
@@ -558,10 +558,8 @@ namespace velodyne_rawdata
               }
 
               // Calculate time of firing the packet's first beam in [s].
-              const float pkt_duration = 1.0e-6 *
-                  BLOCKS_PER_PACKET * VLP16_BLOCK_TDURATION;
-              const ros::Time t_pkt_start(pkt.stamp
-                                          - ros::Duration(0.5*pkt_duration));
+              const float pkt_duration = 1.0e-6 * BLOCKS_PER_PACKET * VLP16_BLOCK_TDURATION;
+              const ros::Time t_pkt_start(pkt.stamp - ros::Duration(pkt_duration));
 
               // If given transform listener, transform point from sensor frame
               // to target frame.

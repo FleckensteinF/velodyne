@@ -47,6 +47,9 @@ namespace velodyne_rawdata
   static const float ROTATION_RESOLUTION = 0.01f; /**< degrees */
   static const uint16_t ROTATION_MAX_UNITS = 36000; /**< hundredths of degrees */
 
+  // Overall time for data collection and transmission of one packet.
+  static const float PACKET_DELAY = 139.0f + 100.0f; // [µs]
+
   /** According to Bruce Hall DISTANCE_MAX is 65.0, but we noticed
    *  valid packets with readings up to 130.0. */
   static const float DISTANCE_MAX = 130.0f;        /**< meters */
