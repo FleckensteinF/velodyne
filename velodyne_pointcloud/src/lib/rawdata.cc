@@ -171,7 +171,7 @@ namespace velodyne_rawdata
           tmp.bytes[0] = raw->blocks[i].data[k];
           tmp.bytes[1] = raw->blocks[i].data[k+1];
           /*condition added to avoid calculating points which are not
-            in the interesting defined area (min_angle < area < max_angle)*/
+            in the interesting area (min_angle < area < max_angle)*/
           if ((raw->blocks[i].rotation >= config_.min_angle
                && raw->blocks[i].rotation <= config_.max_angle
                && config_.min_angle < config_.max_angle)
@@ -571,7 +571,7 @@ namespace velodyne_rawdata
               g_point.point.z         = z_coord;
 
               try {
-                ROS_DEBUG_STREAM("transforming from " << g_point.header.frame_id
+                ROS_DEBUG_STREAM("Transforming from " << g_point.header.frame_id
                                  << " to " << config_.frame_id);
                 tf_listener_->transformPoint(config_.frame_id, g_point, g_point);
               } catch (std::exception& ex) {
