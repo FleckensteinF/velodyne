@@ -117,7 +117,7 @@ namespace velodyne_rawdata
   }
 
   void RawData::unpack(const velodyne_msgs::VelodyneScan::ConstPtr &scanMsg,
-                       SPointCloud &pc)
+                       velodyne_pointcloud::SPointCloud &pc)
   {
     ROS_DEBUG_STREAM("Received Velodyne message, time: " << scanMsg->header.stamp);
 
@@ -277,7 +277,7 @@ namespace velodyne_rawdata
             intensity = (intensity > max_intensity) ? max_intensity : intensity;
 
             // append this point to the cloud
-            SPoint point;
+            velodyne_pointcloud::SPoint point;
             point.azimuth = std::atan2(y_coord, x_coord);
             point.elevation = std::atan2(z_coord, std::sqrt(x_coord*x_coord + y_coord*y_coord));
             point.radius = pointInRange(distance) ? distance : std::numeric_limits<float>::quiet_NaN();
@@ -334,7 +334,7 @@ namespace velodyne_rawdata
 
 
   void RawData::unpack_vlp16(const velodyne_msgs::VelodyneScan::ConstPtr &scanMsg,
-                             SPointCloud &pc)
+                             velodyne_pointcloud::SPointCloud &pc)
   {
     float azimuth;
     float azimuth_diff; // azimuth(N+2)-azimuth(N) with N ... number of firing in packet
@@ -347,7 +347,7 @@ namespace velodyne_rawdata
     // Initialize the organized output point cloud.
     pc.width  = scanMsg->packets.size() * BLOCKS_PER_PACKET * VLP16_FIRINGS_PER_BLOCK;
     pc.height = calibration_.num_lasers;
-    SPoint nan_point;
+    velodyne_pointcloud::SPoint nan_point;
     nan_point.azimuth = nan_point.elevation = nan_point.radius = std::numeric_limits<float>::quiet_NaN();
     nan_point.x = nan_point.y = nan_point.z = std::numeric_limits<float>::quiet_NaN();
     nan_point.intensity = 0u;
@@ -521,7 +521,7 @@ namespace velodyne_rawdata
               intensity = (intensity > max_intensity) ? max_intensity : intensity;
 
               // Insert this point into the cloud.
-              SPoint point;
+              velodyne_pointcloud::SPoint point;
               point.azimuth = -(azimuth_corrected_f * M_PI) / 18000.0f;
               point.elevation = corrections.vert_correction;
               // According to the VLP-16 manual, distance measurements < 1 m
