@@ -276,56 +276,53 @@ namespace velodyne_rawdata
             intensity = (intensity < min_intensity) ? min_intensity : intensity;
             intensity = (intensity > max_intensity) ? max_intensity : intensity;
 
-            // append this point to the cloud
+            // Get the sensor pose w.r.t. the point cloud frame.
+            geometry_msgs::PoseStamped sensor_pose;
+            ros::Time pkt_time(pkt.stamp - ros::Duration(0.5*PACKET_DELAY*1.0e-6));
+            sensor_pose.header.stamp = pkt_time;
+            sensor_pose.header.frame_id = scanMsg->header.frame_id;
+            sensor_pose.pose.position.x = sensor_pose.pose.position.y = sensor_pose.pose.position.z = 0.0f;
+            sensor_pose.pose.orientation.w = 1.0f;
+            sensor_pose.pose.orientation.x = sensor_pose.pose.orientation.y = sensor_pose.pose.orientation.z = 0.0f;
+
+            // Increase point counter.
+            n_points++;
+
+            if (tf_listener_ != NULL && !config_.frame_id.empty())
+            {
+                try
+                {
+                    tf_listener_->transformPose(config_.frame_id, sensor_pose, sensor_pose);
+                }
+                catch (std::exception& ex)
+                {
+                    // Only log tf error once every 100 times.
+                    ROS_WARN_STREAM_THROTTLE(100,
+                        "Failed to get sensor pose in point cloud frame: " << ex.what() << ".");
+
+                    // Skip this point.
+                    continue;
+                }
+            }
+
+            // Append this point to the cloud.
             velodyne_pointcloud::SPoint point;
-            point.azimuth = std::atan2(y_coord, x_coord);
+            point.sensor_x  = sensor_pose.pose.position.x;
+            point.sensor_y  = sensor_pose.pose.position.y;
+            point.sensor_z  = sensor_pose.pose.position.z;
+            point.sensor_qw = sensor_pose.pose.orientation.w;
+            point.sensor_qx = sensor_pose.pose.orientation.x;
+            point.sensor_qy = sensor_pose.pose.orientation.y;
+            point.sensor_qz = sensor_pose.pose.orientation.z;
+            point.azimuth   = std::atan2(y_coord, x_coord);
             point.elevation = std::atan2(z_coord, std::sqrt(x_coord*x_coord + y_coord*y_coord));
-            point.radius = pointInRange(distance) ? distance : std::numeric_limits<float>::quiet_NaN();
-            point.x = point.y = point.z = std::numeric_limits<float>::quiet_NaN();
+            point.radius    = pointInRange(distance) ? distance : std::numeric_limits<float>::quiet_NaN();
             point.intensity = 0.0f;
-            point.ring = corrections.laser_ring;
+            point.ring      = corrections.laser_ring;
 
             int col = n_points / calibration_.num_lasers;
             int row = calibration_.num_lasers-1 - point.ring;
             pc.at(col, row) = point;
-            n_points++;   // Increase point counter.
-
-            if (!pointInRange(distance))
-              continue;
-
-            if (tf_listener_ == NULL || config_.frame_id.empty()) {
-              pc.at(col, row).x         = x_coord;
-              pc.at(col, row).y         = y_coord;
-              pc.at(col, row).z         = z_coord;
-              pc.at(col, row).intensity = intensity;
-              continue;
-            }
-
-            // If given transform listener, transform point from sensor frame
-            // to target frame.
-            geometry_msgs::PointStamped g_point;
-            /// \todo Use the exact beam firing time for transforming points,
-            ///       not the average time stamp of the whole block.
-            g_point.header.stamp    = pkt.stamp - ros::Duration(0.5*PACKET_DELAY*1.0e-6);
-            g_point.header.frame_id = scanMsg->header.frame_id;
-            g_point.point.x         = x_coord;
-            g_point.point.y         = y_coord;
-            g_point.point.z         = z_coord;
-
-            try {
-              ROS_DEBUG_STREAM("transforming from " << g_point.header.frame_id
-                               << " to " << config_.frame_id);
-              tf_listener_->transformPoint(config_.frame_id, g_point, g_point);
-            } catch (std::exception& ex) {
-              // only log tf error once every 100 times
-              ROS_WARN_THROTTLE(100, "%s", ex.what());
-              continue;                   // skip this point
-            }
-
-            pc.at(col, row).x         = g_point.point.x;
-            pc.at(col, row).y         = g_point.point.y;
-            pc.at(col, row).z         = g_point.point.z;
-            pc.at(col, row).intensity = intensity;
           }
         }
       }
@@ -347,12 +344,6 @@ namespace velodyne_rawdata
     // Initialize the organized output point cloud.
     pc.width  = scanMsg->packets.size() * BLOCKS_PER_PACKET * VLP16_FIRINGS_PER_BLOCK;
     pc.height = calibration_.num_lasers;
-    velodyne_pointcloud::SPoint nan_point;
-    nan_point.azimuth = nan_point.elevation = nan_point.radius = std::numeric_limits<float>::quiet_NaN();
-    nan_point.x = nan_point.y = nan_point.z = std::numeric_limits<float>::quiet_NaN();
-    nan_point.intensity = 0u;
-    nan_point.ring = -1;
-    pc.points.resize(pc.width * pc.height, nan_point);
 
     // Set the output point cloud frame ID.
     if (tf_listener_ == NULL || config_.frame_id.empty())
@@ -499,7 +490,6 @@ namespace velodyne_rawdata
                */
               z = distance_y * sin_vert_angle + vert_offset*cos_vert_angle;
 
-
               /** Use standard ROS coordinate system (right-hand rule) */
               float x_coord = y;
               float y_coord = -x;
@@ -520,16 +510,46 @@ namespace velodyne_rawdata
               intensity = (intensity < min_intensity) ? min_intensity : intensity;
               intensity = (intensity > max_intensity) ? max_intensity : intensity;
 
-              // Insert this point into the cloud.
+              // Get the sensor pose w.r.t. the point cloud frame.
+              geometry_msgs::PoseStamped sensor_pose;
+              ros::Time pkt_time(pkt.stamp - ros::Duration(0.5*PACKET_DELAY*1.0e-6));
+              sensor_pose.header.stamp = pkt_time;
+              sensor_pose.header.frame_id = scanMsg->header.frame_id;
+              sensor_pose.pose.position.x = sensor_pose.pose.position.y = sensor_pose.pose.position.z = 0.0f;
+              sensor_pose.pose.orientation.w = 1.0f;
+              sensor_pose.pose.orientation.x = sensor_pose.pose.orientation.y = sensor_pose.pose.orientation.z = 0.0f;
+
+              if (tf_listener_ != NULL && !config_.frame_id.empty())
+              {
+                  try
+                  {
+                      tf_listener_->transformPose(config_.frame_id, sensor_pose, sensor_pose);
+                  }
+                  catch (std::exception& ex)
+                  {
+                      // Only log tf error once every 100 times.
+                      ROS_WARN_STREAM_THROTTLE(100,
+                          "Failed to get sensor pose in point cloud frame: " << ex.what() << ".");
+
+                      // Skip this point.
+                      continue;
+                  }
+              }
+
+              // Append this point to the cloud.
               velodyne_pointcloud::SPoint point;
-              point.azimuth = -(azimuth_corrected_f * M_PI) / 18000.0f;
+              point.sensor_x  = sensor_pose.pose.position.x;
+              point.sensor_y  = sensor_pose.pose.position.y;
+              point.sensor_z  = sensor_pose.pose.position.z;
+              point.sensor_qw = sensor_pose.pose.orientation.w;
+              point.sensor_qx = sensor_pose.pose.orientation.x;
+              point.sensor_qy = sensor_pose.pose.orientation.y;
+              point.sensor_qz = sensor_pose.pose.orientation.z;
+              point.azimuth   = -(azimuth_corrected_f * M_PI) / 18000.0f;
               point.elevation = corrections.vert_correction;
-              // According to the VLP-16 manual, distance measurements < 1 m
-              // shall be discarded.
-              point.radius = pointInRange(distance) ? distance : std::numeric_limits<float>::quiet_NaN();
-              point.x = point.y = point.z = std::numeric_limits<float>::quiet_NaN();
-              point.intensity = 0u;
-              point.ring = corrections.laser_ring;
+              point.radius    = pointInRange(distance) ? distance : std::numeric_limits<float>::quiet_NaN();
+              point.intensity = 0.0f;
+              point.ring      = corrections.laser_ring;
 
               // Compute the row and column index of the point.
               int row = calibration_.num_lasers-1 - point.ring;
@@ -545,45 +565,6 @@ namespace velodyne_rawdata
                           + firing;
 
               pc.at(col, row) = point;
-
-              if (!pointInRange(distance))
-                continue;
-
-              if (tf_listener_ == NULL || config_.frame_id.empty()) {
-                pc.at(col, row).x         = x_coord;
-                pc.at(col, row).y         = y_coord;
-                pc.at(col, row).z         = z_coord;
-                pc.at(col, row).intensity = intensity;
-                continue;
-              }
-
-              // Calculate time of firing the packet's first beam in [s].
-              const float pkt_duration = 1.0e-6 * BLOCKS_PER_PACKET * VLP16_BLOCK_TDURATION;
-              const ros::Time t_pkt_start(pkt.stamp - ros::Duration(pkt_duration));
-
-              // If given transform listener, transform point from sensor frame
-              // to target frame.
-              geometry_msgs::PointStamped g_point;
-              g_point.header.stamp    = t_pkt_start + ros::Duration(t_beam*1.0e-6);
-              g_point.header.frame_id = scanMsg->header.frame_id;
-              g_point.point.x         = x_coord;
-              g_point.point.y         = y_coord;
-              g_point.point.z         = z_coord;
-
-              try {
-                ROS_DEBUG_STREAM("Transforming from " << g_point.header.frame_id
-                                 << " to " << config_.frame_id);
-                tf_listener_->transformPoint(config_.frame_id, g_point, g_point);
-              } catch (std::exception& ex) {
-                // only log tf error once every 100 times
-                ROS_WARN_THROTTLE(100, "%s", ex.what());
-                continue;                   // skip this point
-              }
-
-              pc.at(col, row).x         = g_point.point.x;
-              pc.at(col, row).y         = g_point.point.y;
-              pc.at(col, row).z         = g_point.point.z;
-              pc.at(col, row).intensity = intensity;
             }
           }
         }

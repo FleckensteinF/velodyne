@@ -36,7 +36,8 @@ namespace velodyne_pointcloud
   // Euclidean coordinate, spherical coordinate, intensity and ring number.
   struct SphericalPoint
   {
-      float x, y, z;
+      float sensor_x, sensor_y, sensor_z;
+      float sensor_qw, sensor_qx, sensor_qy, sensor_qz;
       float azimuth, elevation, radius;
       float intensity;
       uint16_t ring;
@@ -60,18 +61,17 @@ POINT_CLOUD_REGISTER_POINT_STRUCT(velodyne_pointcloud::PointXYZIR,
                                   (uint16_t, ring, ring))
 
 POINT_CLOUD_REGISTER_POINT_STRUCT(velodyne_pointcloud::SphericalPoint,
-                                  (float, x, x)
-                                  (float, y, y)
-                                  (float, z, z)
+                                  (float, sensor_x, sensor_x)
+                                  (float, sensor_y, sensor_y)
+                                  (float, sensor_z, sensor_z)
+                                  (float, sensor_qw, sensor_qw)
+                                  (float, sensor_qx, sensor_qx)
+                                  (float, sensor_qy, sensor_qy)
+                                  (float, sensor_qz, sensor_qz)
                                   (float, azimuth, azimuth)
                                   (float, elevation, elevation)
                                   (float, radius, radius)
                                   (float, intensity, intensity)
                                   (uint16_t, ring, ring))
 
-
-
-
-
 #endif // __VELODYNE_POINTCLOUD_POINT_TYPES_H
-
