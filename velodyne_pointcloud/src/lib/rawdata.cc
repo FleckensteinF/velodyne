@@ -553,7 +553,7 @@ namespace velodyne_rawdata
                 pc.at(col, row).x         = x_coord;
                 pc.at(col, row).y         = y_coord;
                 pc.at(col, row).z         = z_coord;
-                pc.at(col, row).intensity = (uint8_t)intensity;
+                pc.at(col, row).intensity = intensity;
                 continue;
               }
 
@@ -583,7 +583,7 @@ namespace velodyne_rawdata
               pc.at(col, row).x         = g_point.point.x;
               pc.at(col, row).y         = g_point.point.y;
               pc.at(col, row).z         = g_point.point.z;
-              pc.at(col, row).intensity = (uint8_t)intensity;
+              pc.at(col, row).intensity = intensity;
             }
           }
         }
