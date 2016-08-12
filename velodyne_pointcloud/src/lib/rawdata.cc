@@ -42,9 +42,7 @@ namespace velodyne_rawdata
   //
   ////////////////////////////////////////////////////////////////////////
 
-  using namespace velodyne_pointcloud;
-
-  RawData::RawData() : tf_listener_(NULL) {}
+  RawData::RawData() {}
 
   /** Update parameters: conversions and update */
   void RawData::setParameters(double min_range,
@@ -500,6 +498,7 @@ namespace velodyne_rawdata
                * model we used.
                */
               z = distance_y * sin_vert_angle + vert_offset*cos_vert_angle;
+
 
               /** Use standard ROS coordinate system (right-hand rule) */
               float x_coord = y;
