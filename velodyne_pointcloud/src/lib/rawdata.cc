@@ -128,7 +128,7 @@ namespace velodyne_rawdata
       return;
     }
 
-    // Define dimensions of organized output point cloud and fill it with NaN.
+    // Define dimensions of organized output point cloud.
     pc.width  = scanMsg->packets.size() * SCANS_PER_PACKET / calibration_.num_lasers;
     pc.height = calibration_.num_lasers;
     pc.points.resize(pc.width * pc.height);
