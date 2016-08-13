@@ -147,8 +147,8 @@ namespace velodyne_rawdata
 
       // Get the sensor pose w.r.t. the point cloud frame.
       geometry_msgs::PoseStamped sensor_pose;
-      ros::Time pkt_time(pkt.stamp - ros::Duration(0.5*PACKET_DELAY*1.0e-6));
-      sensor_pose.header.stamp = pkt_time;
+      ros::Time pkt_stamp(pkt.stamp - ros::Duration(0.5*PACKET_DELAY*1.0e-6));
+      sensor_pose.header.stamp = pkt_stamp;
       sensor_pose.header.frame_id = scanMsg->header.frame_id;
       sensor_pose.pose.position.x = sensor_pose.pose.position.y = sensor_pose.pose.position.z = 0.0f;
       sensor_pose.pose.orientation.w = 1.0f;
@@ -163,11 +163,8 @@ namespace velodyne_rawdata
           catch (std::exception& ex)
           {
               // Only log tf error once every 100 times.
-              ROS_WARN_STREAM_THROTTLE(100,
+              ROS_ERROR_STREAM_THROTTLE(100,
                   "Failed to get sensor pose in point cloud frame: " << ex.what() << ".");
-
-              // Skip this point.
-              continue;
           }
       }
 
@@ -356,32 +353,10 @@ namespace velodyne_rawdata
       const velodyne_msgs::VelodynePacket& pkt = scanMsg->packets[packet];
       const raw_packet_t *raw = (const raw_packet_t *) &pkt.data[0];
 
-      // Get the sensor pose w.r.t. the point cloud frame.
-      geometry_msgs::PoseStamped sensor_pose;
-      ros::Time pkt_time(pkt.stamp - ros::Duration(0.5*PACKET_DELAY*1.0e-6));
-      sensor_pose.header.stamp = pkt_time;
-      sensor_pose.header.frame_id = scanMsg->header.frame_id;
-      sensor_pose.pose.position.x = sensor_pose.pose.position.y = sensor_pose.pose.position.z = 0.0f;
-      sensor_pose.pose.orientation.w = 1.0f;
-      sensor_pose.pose.orientation.x = sensor_pose.pose.orientation.y = sensor_pose.pose.orientation.z = 0.0f;
-
-      if (tf_listener_ != NULL && !config_.frame_id.empty())
-      {
-          try
-          {
-              tf_listener_->transformPose(config_.frame_id, sensor_pose, sensor_pose);
-          }
-          catch (std::exception& ex)
-          {
-              // Only log tf error once every 100 times.
-              ROS_WARN_STREAM_THROTTLE(100,
-                  "Failed to get sensor pose in point cloud frame: " << ex.what() << ".");
-
-              // Skip this point.
-              continue;
-          }
-      }
-
+      // Compute the time stamp of the beginning of the packet.
+      const float pkt_duration = 1.0e6 * BLOCKS_PER_PACKET * VLP16_BLOCK_TDURATION;
+      const ros::Time t_pkt_start(pkt.stamp - ros::Duration(pkt_duration));
+ 
       // Read the factory bytes to find out whether the sensor is in dual return mode.
       const bool dual_return = (raw->status[PACKET_STATUS_SIZE-2] == 0x39);
 
@@ -535,6 +510,28 @@ namespace velodyne_rawdata
                 (1 - tmp.uint/65535)*(1 - tmp.uint/65535)));
               intensity = (intensity < min_intensity) ? min_intensity : intensity;
               intensity = (intensity > max_intensity) ? max_intensity : intensity;
+
+              // Get the sensor pose w.r.t. the point cloud frame.
+              geometry_msgs::PoseStamped sensor_pose;
+              sensor_pose.header.stamp = t_pkt_start + ros::Duration(t_beam * 1.0e-6);
+              sensor_pose.header.frame_id = scanMsg->header.frame_id;
+              sensor_pose.pose.position.x = sensor_pose.pose.position.y = sensor_pose.pose.position.z = 0.0f;
+              sensor_pose.pose.orientation.w = 1.0f;
+              sensor_pose.pose.orientation.x = sensor_pose.pose.orientation.y = sensor_pose.pose.orientation.z = 0.0f;
+
+              if (tf_listener_ != NULL && !config_.frame_id.empty())
+              {
+                  try
+                  {
+                      tf_listener_->transformPose(config_.frame_id, sensor_pose, sensor_pose);
+                  }
+                  catch (std::exception& ex)
+                  {
+                      // Only log tf error once every 100 times.
+                      ROS_ERROR_STREAM_THROTTLE(100,
+                          "Failed to get sensor pose in point cloud frame: " << ex.what() << ".");
+                  }
+              }
 
               // Append this point to the cloud.
               velodyne_pointcloud::SPoint point;
