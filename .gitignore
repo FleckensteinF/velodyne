@@ -7,3 +7,5 @@
 *.orig
 doc
 TAGS
+*.swp
+
