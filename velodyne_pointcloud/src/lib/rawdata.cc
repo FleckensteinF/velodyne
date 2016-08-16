@@ -157,7 +157,7 @@ namespace velodyne_rawdata
       const velodyne_msgs::VelodynePacket& pkt = scanMsg->packets[next];
       const raw_packet_t *raw = (const raw_packet_t *) &pkt.data[0];
 
-      // Get the sensor pose w.r.t. the point cloud frame.
+      // Get the sensor pose w.r.t. the scan frame.
       geometry_msgs::PoseStamped sensor_pose;
       sensor_pose.header.stamp = pkt.stamp;
       sensor_pose.header.frame_id = scanMsg->header.frame_id;
