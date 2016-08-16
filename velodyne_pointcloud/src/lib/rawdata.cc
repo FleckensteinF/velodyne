@@ -298,7 +298,7 @@ namespace velodyne_rawdata
 
             // If the point is not in the valid measurement range, skip it.
             if (!pointInRange(distance))
-              continue;
+                continue;
 
             // Set the point's intensity.
             pc.at(col, row).intensity = (uint8_t)intensity;
@@ -324,7 +324,8 @@ namespace velodyne_rawdata
 
                 try
                 {
-                    ROS_DEBUG_STREAM("Transforming from " << t_point.header.frame_id << " to " << config_.frame_id << ".");
+                    ROS_DEBUG_STREAM_THROTTLE(100,
+                        "Transforming from " << t_point.header.frame_id << " to " << config_.frame_id << ".");
                     tf_listener_->transformPoint(config_.frame_id, t_point, t_point);
                 }
                 catch (std::exception& ex)
