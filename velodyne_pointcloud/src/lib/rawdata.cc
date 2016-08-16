@@ -324,8 +324,8 @@ namespace velodyne_rawdata
                 try
                 {
                     ROS_DEBUG_STREAM_THROTTLE(100,
-                        "Transforming from " << t_point.header.frame_id << " to " << config_.frame_id << ".");
-                    tf_listener_->transformPoint(config_.frame_id, t_point, t_point);
+                        "Transforming from " << t_point.header.frame_id << " to " << pc.header.frame_id << ".");
+                    tf_listener_->transformPoint(pc.header.frame_id, t_point, t_point);
                 }
                 catch (std::exception& ex)
                 {
