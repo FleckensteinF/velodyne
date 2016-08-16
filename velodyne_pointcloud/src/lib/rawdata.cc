@@ -181,7 +181,7 @@ namespace velodyne_rawdata
           tmp.bytes[0] = raw->blocks[i].data[k];
           tmp.bytes[1] = raw->blocks[i].data[k+1];
           /*condition added to avoid calculating points which are not
-            in the interesting defined area (min_angle < area < max_angle)*/
+            in the interesting area (min_angle < area < max_angle)*/
           if ((raw->blocks[i].rotation >= config_.min_angle
                && raw->blocks[i].rotation <= config_.max_angle
                && config_.min_angle < config_.max_angle)
@@ -301,7 +301,7 @@ namespace velodyne_rawdata
                 continue;
 
             // Set the point's intensity.
-            pc.at(col, row).intensity = (uint8_t)intensity;
+            pc.at(col, row).intensity = intensity;
 
             // Set the point's coordinates.
             if (tf_listener_ == NULL || config_.frame_id.empty())
@@ -510,7 +510,6 @@ namespace velodyne_rawdata
                * model we used.
                */
               z = distance_y * sin_vert_angle + vert_offset*cos_vert_angle;
-
 
               /** Use standard ROS coordinate system (right-hand rule) */
               float x_coord = y;
