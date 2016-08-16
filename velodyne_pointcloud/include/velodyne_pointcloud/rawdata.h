@@ -44,18 +44,9 @@ namespace velodyne_rawdata
   static const int SCANS_PER_BLOCK = 32;
   static const int BLOCK_DATA_SIZE = (SCANS_PER_BLOCK * RAW_SCAN_SIZE);
 
-  static const float ROTATION_RESOLUTION = 0.01f; /**< degrees */
-  static const uint16_t ROTATION_MAX_UNITS = 36000; /**< hundredths of degrees */
-
-  // Overall time for data collection and transmission of one packet.
-  static const float PACKET_DELAY = 139.0f + 100.0f; // [µs]
-
-  /** According to Bruce Hall DISTANCE_MAX is 65.0, but we noticed
-   *  valid packets with readings up to 130.0. */
-  static const float DISTANCE_MAX = 130.0f;        /**< meters */
-  static const float DISTANCE_RESOLUTION = 0.002f; /**< meters */
-  static const float DISTANCE_MAX_UNITS = (DISTANCE_MAX
-                                           / DISTANCE_RESOLUTION + 1.0);
+  static const float ROTATION_RESOLUTION      =     0.01f;  // [deg]
+  static const uint16_t ROTATION_MAX_UNITS    = 36000u;     // [deg/100]
+  static const float DISTANCE_RESOLUTION      =     0.002f; // [m]
 
   /** @todo make this work for both big and little-endian machines */
   static const uint16_t UPPER_BANK = 0xeeff;
@@ -161,7 +152,7 @@ namespace velodyne_rawdata
       double min_range;                ///< minimum range to publish
       int min_angle;                   ///< minimum angle to publish
       int max_angle;                   ///< maximum angle to publish
-      std::string frame_id;            ///< frame in which to transform points
+      std::string frame_id;            ///< frame into which to transform points
 
       double tmp_min_angle;
       double tmp_max_angle;

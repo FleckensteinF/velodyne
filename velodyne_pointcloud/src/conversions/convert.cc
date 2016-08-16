@@ -67,7 +67,7 @@ namespace velodyne_pointcloud
     data_->unpack(scanMsg, *outMsg);
 
     // publish the cloud message
-    ROS_DEBUG_STREAM("Publishing " << outMsg->width  << " x " << outMsg->height
+    ROS_DEBUG_STREAM("Publishing " << outMsg->height << " x " << outMsg->width
                      << " Velodyne points, time: " << outMsg->header.stamp);
     output_.publish(outMsg);
   }

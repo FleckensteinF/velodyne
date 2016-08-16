@@ -33,11 +33,8 @@
 #include <pcl_ros/impl/transforms.hpp>
 
 // instantiate template for transforming a VPointCloud
-template bool
-  pcl_ros::transformPointCloud<velodyne_pointcloud::VPoint>(const std::string &,
-                                       const velodyne_pointcloud::VPointCloud &,
-                                       velodyne_pointcloud::VPointCloud &,
-                                       const tf::TransformListener &);
+template bool pcl_ros::transformPointCloud<VPoint>(
+                const std::string&, const VPointCloud&, VPointCloud&, const tf::TransformListener&);
 
 namespace velodyne_pointcloud
 {
@@ -62,7 +59,7 @@ namespace velodyne_pointcloud
       TransformNodeConfig> > srv_;
     void reconfigure_callback(velodyne_pointcloud::TransformNodeConfig &config,
                   uint32_t level);
-    
+
     const std::string tf_prefix_;
     boost::shared_ptr<velodyne_rawdata::RawData> data_;
     message_filters::Subscriber<velodyne_msgs::VelodyneScan> velodyne_scan_;
