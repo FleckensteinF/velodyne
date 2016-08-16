@@ -122,8 +122,7 @@ namespace velodyne_rawdata
 
 
   /// Convert scan message to point cloud.
-  void RawData::unpack(const velodyne_msgs::VelodyneScan::ConstPtr &scanMsg,
-                       VPointCloud &pc)
+  void RawData::unpack(const velodyne_msgs::VelodyneScan::ConstPtr &scanMsg, VPointCloud &pc)
   {
     ROS_DEBUG_STREAM("Received Velodyne message, time: " << scanMsg->header.stamp);
 
@@ -134,7 +133,7 @@ namespace velodyne_rawdata
       return;
     }
 
-    // Define dimensions of organized output point cloud.
+    // Define dimensions of the organized output point cloud and fill it with NaN-valued points.
     pc.width  = scanMsg->packets.size() * SCANS_PER_PACKET / calibration_.num_lasers;
     pc.height = calibration_.num_lasers;
     VPoint nanPoint;
