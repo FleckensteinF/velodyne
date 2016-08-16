@@ -137,10 +137,10 @@ namespace velodyne_rawdata
     // Define dimensions of organized output point cloud.
     pc.width  = scanMsg->packets.size() * SCANS_PER_PACKET / calibration_.num_lasers;
     pc.height = calibration_.num_lasers;
-    SPoint nanPoint;
+    velodyne_pointcloud::SPoint nanPoint;
     nanPoint.sensor_x = nanPoint.sensor_y = nanPoint.sensor_z = std::numeric_limits<float>::infinity();
     nanPoint.sensor_qw = nanPoint.sensor_qx = nanPoint.sensor_qy = nanPoint.sensor_qz = std::numeric_limits<float>::infinity();
-    nanPoint.azimuth = nanPoint.elevation = nanPoint.radius = std::numeric_limits<float>::
+    nanPoint.azimuth = nanPoint.elevation = nanPoint.radius = std::numeric_limits<float>::infinity();
     nanPoint.intensity = std::numeric_limits<float>::infinity();
     nanPoint.ring = -1;
     pc.points.resize(pc.width * pc.height, nanPoint);
@@ -164,7 +164,7 @@ namespace velodyne_rawdata
       sensor_pose.pose.position.x = sensor_pose.pose.position.y = sensor_pose.pose.position.z = 0.0f;
       sensor_pose.pose.orientation.w = 1.0f;
       sensor_pose.pose.orientation.x = sensor_pose.pose.orientation.y = sensor_pose.pose.orientation.z = 0.0f;
- 
+
       if (tf_listener_ != NULL && !config_.frame_id.empty())
       {
           try
@@ -310,10 +310,14 @@ namespace velodyne_rawdata
             intensity = (intensity < min_intensity) ? min_intensity : intensity;
             intensity = (intensity > max_intensity) ? max_intensity : intensity;
 
-            // Increase point counter.
+            // Compute this point's index in the point cloud.
+            int col = n_points / calibration_.num_lasers;
+            int row = calibration_.num_lasers-1 - corrections.laser_ring;
+
+            // Increase the point counter.
             n_points++;
 
-            // Append this point to the cloud.
+            // Set this point in the point cloud.
             velodyne_pointcloud::SPoint point;
             point.sensor_x  = sensor_pose.pose.position.x;
             point.sensor_y  = sensor_pose.pose.position.y;
@@ -325,11 +329,8 @@ namespace velodyne_rawdata
             point.azimuth   = std::atan2(y_coord, x_coord);
             point.elevation = std::atan2(z_coord, std::sqrt(x_coord*x_coord + y_coord*y_coord));
             point.radius    = pointInRange(distance) ? distance : std::numeric_limits<float>::quiet_NaN();
-            point.intensity = 0.0f;
+            point.intensity = intensity;
             point.ring      = corrections.laser_ring;
-
-            int col = n_points / calibration_.num_lasers;
-            int row = calibration_.num_lasers-1 - point.ring;
             pc.at(col, row) = point;
           }
         }
@@ -352,6 +353,13 @@ namespace velodyne_rawdata
     // Initialize the organized output point cloud.
     pc.width  = scanMsg->packets.size() * BLOCKS_PER_PACKET * VLP16_FIRINGS_PER_BLOCK;
     pc.height = calibration_.num_lasers;
+    velodyne_pointcloud::SPoint nanPoint;
+    nanPoint.sensor_x = nanPoint.sensor_y = nanPoint.sensor_z = std::numeric_limits<float>::infinity();
+    nanPoint.sensor_qw = nanPoint.sensor_qx = nanPoint.sensor_qy = nanPoint.sensor_qz = std::numeric_limits<float>::infinity();
+    nanPoint.azimuth = nanPoint.elevation = nanPoint.radius = std::numeric_limits<float>::infinity();
+    nanPoint.intensity = std::numeric_limits<float>::infinity();
+    nanPoint.ring = -1;
+    pc.points.resize(pc.width * pc.height, nanPoint);
 
     // Set the output point cloud frame ID.
     if (tf_listener_ == NULL || config_.frame_id.empty())
@@ -367,7 +375,7 @@ namespace velodyne_rawdata
       // Compute the time stamp of the beginning of the packet.
       const float pkt_duration = 1.0e6 * BLOCKS_PER_PACKET * VLP16_BLOCK_TDURATION;
       const ros::Time t_pkt_start(pkt.stamp - ros::Duration(pkt_duration));
- 
+
       // Read the factory bytes to find out whether the sensor is in dual return mode.
       const bool dual_return = (raw->status[PACKET_STATUS_SIZE-2] == 0x39);
 
