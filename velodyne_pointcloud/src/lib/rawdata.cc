@@ -134,7 +134,7 @@ namespace velodyne_rawdata
       return;
     }
 
-    // Define dimensions of organized output point cloud and fill it with NaN-valued points.
+    // Define dimensions of the organized output point cloud and fill it with NaN-valued points.
     pc.width  = scanMsg->packets.size() * SCANS_PER_PACKET / calibration_.num_lasers;
     pc.height = calibration_.num_lasers;
     velodyne_pointcloud::SPoint nanPoint;
@@ -157,7 +157,7 @@ namespace velodyne_rawdata
       const velodyne_msgs::VelodynePacket& pkt = scanMsg->packets[next];
       const raw_packet_t *raw = (const raw_packet_t *) &pkt.data[0];
 
-      // Get the sensor pose w.r.t. the scan frame.
+      // Define the sensor pose w.r.t. the scan frame.
       geometry_msgs::PoseStamped sensor_pose;
       sensor_pose.header.stamp = pkt.stamp;
       sensor_pose.header.frame_id = scanMsg->header.frame_id;
@@ -169,7 +169,7 @@ namespace velodyne_rawdata
       {
           try
           {
-              tf_listener_->transformPose(config_.frame_id, sensor_pose, sensor_pose);
+              tf_listener_->transformPose(pc.header.frame_id, sensor_pose, sensor_pose);
           }
           catch (std::exception& ex)
           {
