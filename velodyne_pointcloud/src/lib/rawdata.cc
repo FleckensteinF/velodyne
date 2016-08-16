@@ -134,7 +134,7 @@ namespace velodyne_rawdata
       return;
     }
 
-    // Define dimensions of organized output point cloud.
+    // Define dimensions of organized output point cloud and fill it with NaN-valued points.
     pc.width  = scanMsg->packets.size() * SCANS_PER_PACKET / calibration_.num_lasers;
     pc.height = calibration_.num_lasers;
     velodyne_pointcloud::SPoint nanPoint;
@@ -328,7 +328,8 @@ namespace velodyne_rawdata
             point.sensor_qz = sensor_pose.pose.orientation.z;
             point.azimuth   = std::atan2(y_coord, x_coord);
             point.elevation = std::atan2(z_coord, std::sqrt(x_coord*x_coord + y_coord*y_coord));
-            point.radius    = pointInRange(distance) ? distance : std::numeric_limits<float>::quiet_NaN();
+            float radius    = std::sqrt(x_coord*x_coord + y_coord*y_coord + z_coord*z_coord);
+            point.radius    = pointInRange(radius) ? radius : std::numeric_limits<float>::infinity();
             point.intensity = intensity;
             point.ring      = corrections.laser_ring;
             pc.at(col, row) = point;
