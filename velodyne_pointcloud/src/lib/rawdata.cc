@@ -137,7 +137,11 @@ namespace velodyne_rawdata
     // Define dimensions of organized output point cloud.
     pc.width  = scanMsg->packets.size() * SCANS_PER_PACKET / calibration_.num_lasers;
     pc.height = calibration_.num_lasers;
-    pc.points.resize(pc.width * pc.height);
+    VPoint nanPoint;
+    nanPoint.x = nanPoint.y = nanPoint.z = std::numeric_limits<float>::infinity();
+    nanPoint.intensity = 0u;
+    nanPoint.ring = -1;
+    pc.points.resize(pc.width * pc.height, nanPoint);
 
     // Set the output point cloud frame.
     if (tf_listener_ == NULL || config_.frame_id.empty())
@@ -282,53 +286,58 @@ namespace velodyne_rawdata
             intensity = (intensity < min_intensity) ? min_intensity : intensity;
             intensity = (intensity > max_intensity) ? max_intensity : intensity;
 
-            // append this point to the cloud
-            VPoint point;
-            point.x = point.y = point.z = std::numeric_limits<float>::infinity();
-            point.intensity = 0u;
-            point.ring = corrections.laser_ring;
-
+            // Compute this point's index in the point cloud.
             int col = n_points / calibration_.num_lasers;
-            int row = calibration_.num_lasers-1 - point.ring;
-            pc.at(col, row) = point;
-            n_points++;   // Increase point counter.
+            int row = calibration_.num_lasers-1 - corrections.laser_ring;
 
+            // Increase the point counter.
+            n_points++;
+
+            // Set the point's ring number.
+            pc.at(col, row).ring = corrections.laser_ring;
+
+            // If the point is not in the valid measurement range, skip it.
             if (!pointInRange(distance))
               continue;
 
-            if (tf_listener_ == NULL || config_.frame_id.empty()) {
-              pc.at(col, row).x         = x_coord;
-              pc.at(col, row).y         = y_coord;
-              pc.at(col, row).z         = z_coord;
-              pc.at(col, row).intensity = (uint8_t)intensity;
-              continue;
-            }
-
-            // If given transform listener, transform point from sensor frame
-            // to target frame.
-            geometry_msgs::PointStamped g_point;
-            /// \todo Use the exact beam firing time for transforming points,
-            ///       not the average time stamp of the whole block.
-            g_point.header.stamp    = pkt.stamp;
-            g_point.header.frame_id = scanMsg->header.frame_id;
-            g_point.point.x         = x_coord;
-            g_point.point.y         = y_coord;
-            g_point.point.z         = z_coord;
-
-            try {
-              ROS_DEBUG_STREAM("transforming from " << g_point.header.frame_id
-                               << " to " << config_.frame_id);
-              tf_listener_->transformPoint(config_.frame_id, g_point, g_point);
-            } catch (std::exception& ex) {
-              // only log tf error once every 100 times
-              ROS_WARN_THROTTLE(100, "%s", ex.what());
-              continue;                   // skip this point
-            }
-
-            pc.at(col, row).x         = g_point.point.x;
-            pc.at(col, row).y         = g_point.point.y;
-            pc.at(col, row).z         = g_point.point.z;
+            // Set the point's intensity.
             pc.at(col, row).intensity = (uint8_t)intensity;
+
+            // Set the point's coordinates.
+            if (tf_listener_ == NULL || config_.frame_id.empty())
+            {
+                pc.at(col, row).x = x_coord;
+                pc.at(col, row).y = y_coord;
+                pc.at(col, row).z = z_coord;
+            }
+            else
+            {
+                // If given transform listener, transform point from sensor frame to target frame.
+                geometry_msgs::PointStamped t_point;
+                /// \todo Use the exact beam firing time for transforming points,
+                ///       not the average time stamp of the whole block.
+                t_point.header.stamp = pkt.stamp;
+                t_point.header.frame_id = scanMsg->header.frame_id;
+                t_point.point.x = x_coord;
+                t_point.point.y = y_coord;
+                t_point.point.z = z_coord;
+
+                try
+                {
+                    ROS_DEBUG_STREAM("Transforming from " << t_point.header.frame_id << " to " << config_.frame_id << ".");
+                    tf_listener_->transformPoint(config_.frame_id, t_point, t_point);
+                }
+                catch (std::exception& ex)
+                {
+                    // only log tf error once every 100 times
+                    ROS_WARN_THROTTLE(100, "%s", ex.what());
+                    continue;                   // skip this point
+                }
+
+                pc.at(col, row).x = t_point.point.x;
+                pc.at(col, row).y = t_point.point.y;
+                pc.at(col, row).z = t_point.point.z;
+            }
           }
         }
       }
@@ -562,26 +571,26 @@ namespace velodyne_rawdata
 
               // If given transform listener, transform point from sensor frame
               // to target frame.
-              geometry_msgs::PointStamped g_point;
-              g_point.header.stamp    = t_pkt_start + ros::Duration(t_beam*1.0e-6);
-              g_point.header.frame_id = scanMsg->header.frame_id;
-              g_point.point.x         = x_coord;
-              g_point.point.y         = y_coord;
-              g_point.point.z         = z_coord;
+              geometry_msgs::PointStamped t_point;
+              t_point.header.stamp    = t_pkt_start + ros::Duration(t_beam*1.0e-6);
+              t_point.header.frame_id = scanMsg->header.frame_id;
+              t_point.point.x         = x_coord;
+              t_point.point.y         = y_coord;
+              t_point.point.z         = z_coord;
 
               try {
-                ROS_DEBUG_STREAM("transforming from " << g_point.header.frame_id
+                ROS_DEBUG_STREAM("transforming from " << t_point.header.frame_id
                                  << " to " << config_.frame_id);
-                tf_listener_->transformPoint(config_.frame_id, g_point, g_point);
+                tf_listener_->transformPoint(config_.frame_id, t_point, t_point);
               } catch (std::exception& ex) {
                 // only log tf error once every 100 times
                 ROS_WARN_THROTTLE(100, "%s", ex.what());
                 continue;                   // skip this point
               }
 
-              pc.at(col, row).x         = g_point.point.x;
-              pc.at(col, row).y         = g_point.point.y;
-              pc.at(col, row).z         = g_point.point.z;
+              pc.at(col, row).x         = t_point.point.x;
+              pc.at(col, row).y         = t_point.point.y;
+              pc.at(col, row).z         = t_point.point.z;
               pc.at(col, row).intensity = (uint8_t)intensity;
             }
           }
