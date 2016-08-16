@@ -155,7 +155,7 @@ namespace velodyne_rawdata
       double min_range;                ///< minimum range to publish
       int min_angle;                   ///< minimum angle to publish
       int max_angle;                   ///< maximum angle to publish
-      std::string frame_id;            ///< frame in which to transform points
+      std::string frame_id;            ///< frame into which to transform points
 
       double tmp_min_angle;
       double tmp_max_angle;

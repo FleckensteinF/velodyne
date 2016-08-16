@@ -42,7 +42,10 @@ namespace velodyne_rawdata
   //
   ////////////////////////////////////////////////////////////////////////
 
-  RawData::RawData() : tf_listener_(NULL) {}
+  RawData::RawData()
+      : tf_listener_(NULL)
+  {
+  }
 
   /** Update parameters: conversions and update */
   void RawData::setParameters(double min_range,
@@ -73,12 +76,13 @@ namespace velodyne_rawdata
       config_.max_angle = 36000;
     }
 
+    // Read new target coordinate frame.
     const std::string last_frame_id = config_.frame_id;
     config_.frame_id = frame_id;
-    if (!config_.frame_id.empty()
-        && config_.frame_id != last_frame_id)
-      ROS_INFO_STREAM("Target frame ID: " << config_.frame_id);
+    if (!config_.frame_id.empty() && config_.frame_id != last_frame_id)
+        ROS_INFO_STREAM("Target frame: " << config_.frame_id);
   }
+
 
   /** Set up for on-line operation. */
   int RawData::setup(ros::NodeHandle private_nh, tf::TransformListener* tf_listener)
@@ -116,6 +120,8 @@ namespace velodyne_rawdata
     return 0;
   }
 
+
+  /// Convert scan message to point cloud.
   void RawData::unpack(const velodyne_msgs::VelodyneScan::ConstPtr &scanMsg,
                        VPointCloud &pc)
   {
@@ -133,7 +139,7 @@ namespace velodyne_rawdata
     pc.height = calibration_.num_lasers;
     pc.points.resize(pc.width * pc.height);
 
-    // Set the output point cloud frame ID.
+    // Set the output point cloud frame.
     if (tf_listener_ == NULL || config_.frame_id.empty())
       pc.header.frame_id = scanMsg->header.frame_id;
     else
