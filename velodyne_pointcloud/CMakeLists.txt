@@ -39,7 +39,7 @@ if(NOT ${YAML_CPP_VERSION} VERSION_LESS "0.5")
 add_definitions(-DHAVE_NEW_YAMLCPP)
 endif(NOT ${YAML_CPP_VERSION} VERSION_LESS "0.5")
 
-include_directories(include ${catkin_INCLUDE_DIRS} 
+include_directories(include ${catkin_INCLUDE_DIRS}
   ${dynamic_reconfigure_PACKAGE_PATH}/cmake/cfgbuild.cmake
 )
 
@@ -48,17 +48,6 @@ catkin_package(
     DEPENDS yaml-cpp python-yaml
     INCLUDE_DIRS include
     LIBRARIES velodyne_rawdata)
-    
-# Set the build type.
-if (NOT CMAKE_BUILD_TYPE)
-  set(CMAKE_BUILD_TYPE Release CACHE STRING
-      "Choose type of build: None | Debug | Release | RelWithDebInfo | MinSizeRel"
-      FORCE)
-endif (NOT CMAKE_BUILD_TYPE)
-message(STATUS "CMake build type: ${CMAKE_BUILD_TYPE}")
-
-string(TOUPPER ${CMAKE_BUILD_TYPE} CMAKE_BUILD_TYPE_TOUPPER)
-message(STATUS "Compiler flags: ${CMAKE_CXX_FLAGS} ${CMAKE_CXX_FLAGS_${CMAKE_BUILD_TYPE_TOUPPER}}")
 
 add_subdirectory(src/lib)
 add_subdirectory(src/conversions)
@@ -73,7 +62,7 @@ install(DIRECTORY params/
         DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/params)
 install(PROGRAMS scripts/gen_calibration.py
         DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
-  
+
 
 if (CATKIN_ENABLE_TESTING)
   add_subdirectory(tests)
