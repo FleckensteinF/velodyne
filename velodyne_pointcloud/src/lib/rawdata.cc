@@ -314,8 +314,8 @@ namespace velodyne_rawdata
                 // If given transform listener, transform point from sensor frame to target frame.
                 geometry_msgs::PointStamped t_point;
                 /// \todo Use the exact beam firing time for transforming points,
-                ///       not the average time stamp of the whole block.
-                t_point.header.stamp = pkt.stamp;
+                ///       not the packet receive time.
+                t_point.header.stamp = pkt.stamp; // Sensor pose equals packet receive time (= end of packet creation + TCP delay).
                 t_point.header.frame_id = scanMsg->header.frame_id;
                 t_point.point.x = x_coord;
                 t_point.point.y = y_coord;
@@ -566,12 +566,12 @@ namespace velodyne_rawdata
               const float pkt_duration = 1.0e-6 *
                   BLOCKS_PER_PACKET * VLP16_BLOCK_TDURATION;
               const ros::Time t_pkt_start(pkt.stamp
-                                          - ros::Duration(0.5*pkt_duration));
+                                          - ros::Duration(pkt_duration));
 
               // If given transform listener, transform point from sensor frame
               // to target frame.
               geometry_msgs::PointStamped t_point;
-              t_point.header.stamp    = t_pkt_start + ros::Duration(t_beam*1.0e-6);
+              t_point.header.stamp    = t_pkt_start + ros::Duration(t_beam*1.0e-6); // TODO Why add duration again?
               t_point.header.frame_id = scanMsg->header.frame_id;
               t_point.point.x         = x_coord;
               t_point.point.y         = y_coord;

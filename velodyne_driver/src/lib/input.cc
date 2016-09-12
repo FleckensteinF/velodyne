@@ -110,7 +110,6 @@ namespace velodyne_driver
   /** @brief Get one Velodyne packet. */
   int InputSocket::getPacket(velodyne_msgs::VelodynePacket *pkt, const double time_offset)
   {
-    double time1 = ros::Time::now().toSec();
 
     struct pollfd fds[1];
     fds[0].fd = sockfd_;
@@ -163,6 +162,11 @@ namespace velodyne_driver
               }
           } while ((fds[0].revents & POLLIN) == 0);
 
+        // Time stamp is set to the end time of packet creation.
+        // ASSUMPTION: The velodyne starts sending the packet after it has been collected completely.
+        // We neglect the transfer time. It is handled by the calibration value.
+        pkt->stamp = ros::Time::now() + ros::Duration(time_offset);
+
         // Receive packets that should now be available from the
         // socket using a blocking read.
         ssize_t nbytes = recvfrom(sockfd_, &pkt->data[0],
@@ -193,12 +197,6 @@ namespace velodyne_driver
         ROS_DEBUG_STREAM("incomplete Velodyne packet read: "
                          << nbytes << " bytes");
       }
-
-    // Average the times at which we begin and end reading.  Use that to
-    // estimate when the scan occurred. Add the time offset.
-    double time2 = ros::Time::now().toSec();
-    pkt->stamp = ros::Time((time2 + time1) / 2.0 + time_offset);
-
     return 0;
   }
 
