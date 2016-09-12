@@ -376,6 +376,7 @@ namespace velodyne_rawdata
       // Compute the time stamp of the beginning of the packet.
       const float pkt_duration = 1.0e-6 * BLOCKS_PER_PACKET * VLP16_BLOCK_TDURATION;
       const ros::Time t_pkt_start(pkt.stamp - ros::Duration(pkt_duration));
+          // TODO should be 0.5*pkt_duration? Compare to master.
 
       // Read the factory bytes to find out whether the sensor is in dual return mode.
       const bool dual_return = (raw->status[PACKET_STATUS_SIZE-2] == 0x39);
