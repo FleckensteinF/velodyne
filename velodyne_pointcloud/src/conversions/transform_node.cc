@@ -12,7 +12,6 @@
 
 */
 
-#include <ros/ros.h>
 #include "transform.h"
 
 /** Main node entry point. */
