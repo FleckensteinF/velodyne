@@ -128,6 +128,8 @@ namespace velodyne_rawdata
     ROS_DEBUG_STREAM("Received Velodyne message, time: " << scanMsg->header.stamp);
 
     /** special parsing for the VLP16 **/
+
+    // Special treatment for VLP 16
     if (calibration_.num_lasers == 16)
     {
       unpack_vlp16(scanMsg, pc);
@@ -159,7 +161,8 @@ namespace velodyne_rawdata
 
       // Define the sensor pose w.r.t. the scan frame.
       geometry_msgs::PoseStamped sensor_pose;
-      sensor_pose.header.stamp = pkt.stamp;
+      sensor_pose.header.stamp = pkt.stamp; // Sensor pose equals packet receive time (= end of packet creation + TCP delay).
+      // TODO Set stamp to middle of packet creation or use multiple time points for data block transformation.
       sensor_pose.header.frame_id = scanMsg->header.frame_id;
       sensor_pose.pose.position.x = sensor_pose.pose.position.y = sensor_pose.pose.position.z = 0.0f;
       sensor_pose.pose.orientation.w = 1.0f;
@@ -376,7 +379,6 @@ namespace velodyne_rawdata
       // Compute the time stamp of the beginning of the packet.
       const float pkt_duration = 1.0e-6 * BLOCKS_PER_PACKET * VLP16_BLOCK_TDURATION;
       const ros::Time t_pkt_start(pkt.stamp - ros::Duration(pkt_duration));
-          // TODO should be 0.5*pkt_duration? Compare to master.
 
       // Read the factory bytes to find out whether the sensor is in dual return mode.
       const bool dual_return = (raw->status[PACKET_STATUS_SIZE-2] == 0x39);
