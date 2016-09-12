@@ -35,6 +35,8 @@
 
 namespace velodyne_rawdata
 {
+  /** Log rate for throttled warnings and errors in seconds */
+  static const double LOG_PERIOD_ = 1.0;
 
   /**
    * Raw Velodyne packet constants and structures.

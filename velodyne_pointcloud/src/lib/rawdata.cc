@@ -174,7 +174,7 @@ namespace velodyne_rawdata
           catch (std::exception& ex)
           {
               // Only log tf error maximum once every second.
-              ROS_ERROR_STREAM_THROTTLE(1,
+              ROS_ERROR_STREAM_THROTTLE(LOG_PERIOD_,
                   "Failed to get sensor pose in point cloud frame: " << ex.what() << ".");
           }
       }
@@ -392,7 +392,7 @@ namespace velodyne_rawdata
         if (UPPER_BANK != raw->blocks[block].header) {
           // Do not flood the log with messages, only issue at most one
           // of these warnings per minute.
-          ROS_WARN_STREAM_THROTTLE(60, "skipping invalid VLP-16 packet: block "
+          ROS_WARN_STREAM_THROTTLE(LOG_PERIOD_, "skipping invalid VLP-16 packet: block "
                                    << block << " header value is "
                                    << raw->blocks[block].header);
           return;                         // bad packet: skip the rest
@@ -549,7 +549,7 @@ namespace velodyne_rawdata
                   catch (std::exception& ex)
                   {
                       // Only log tf error maximum once every second.
-                      ROS_ERROR_STREAM_THROTTLE(1,
+                      ROS_ERROR_STREAM_THROTTLE(LOG_PERIOD_,
                           "Failed to get sensor pose in point cloud frame: " << ex.what() << ".");
                   }
               }
