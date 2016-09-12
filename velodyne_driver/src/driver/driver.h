@@ -15,12 +15,16 @@
 #ifndef _VELODYNE_DRIVER_H_
 #define _VELODYNE_DRIVER_H_ 1
 
+#include <cmath>
 #include <string>
-#include <ros/ros.h>
+
 #include <diagnostic_updater/diagnostic_updater.h>
 #include <diagnostic_updater/publisher.h>
-#include <dynamic_reconfigure/server.h>
+#include <ros/ros.h>
+#include <tf/transform_listener.h>
+#include <velodyne_msgs/VelodyneScan.h>
 
+#include <dynamic_reconfigure/server.h>
 #include <velodyne_driver/input.h>
 #include <velodyne_driver/VelodyneNodeConfig.h>
 

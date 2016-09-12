@@ -11,7 +11,6 @@
  *  ROS driver node for the Velodyne 3D LIDARs.
  */
 
-#include <ros/ros.h>
 #include "driver.h"
 
 int main(int argc, char** argv)
