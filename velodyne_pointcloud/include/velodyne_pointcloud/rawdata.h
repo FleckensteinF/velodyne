@@ -39,6 +39,9 @@ namespace velodyne_rawdata
   typedef velodyne_pointcloud::PointXYZIR VPoint;
   typedef pcl::PointCloud<VPoint> VPointCloud;
 
+  /** Log rate for throttled warnings and errors in seconds */
+  static const double LOG_PERIOD_ = 1.0;
+
   /**
    * Raw Velodyne packet constants and structures.
    */

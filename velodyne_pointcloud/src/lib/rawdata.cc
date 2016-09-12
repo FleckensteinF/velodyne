@@ -323,14 +323,14 @@ namespace velodyne_rawdata
 
                 try
                 {
-                    ROS_DEBUG_STREAM_THROTTLE(100,
+                    ROS_DEBUG_STREAM_THROTTLE(LOG_PERIOD_,
                         "Transforming from " << t_point.header.frame_id << " to " << pc.header.frame_id << ".");
                     tf_listener_->transformPoint(pc.header.frame_id, t_point, t_point);
                 }
                 catch (std::exception& ex)
                 {
                     // only log tf error once every 100 times
-                    ROS_WARN_THROTTLE(100, "%s", ex.what());
+                    ROS_WARN_THROTTLE(LOG_PERIOD_, "%s", ex.what());
                     continue;                   // skip this point
                 }
 
@@ -389,8 +389,8 @@ namespace velodyne_rawdata
         // Sanity check: ignore packets with mangled or otherwise different contents.
         if (UPPER_BANK != raw->blocks[block].header) {
           // Do not flood the log with messages, only issue at most one
-          // of these warnings per minute.
-          ROS_WARN_STREAM_THROTTLE(60, "skipping invalid VLP-16 packet: block "
+          // of these warnings per second.
+          ROS_WARN_STREAM_THROTTLE(LOG_PERIOD_, "skipping invalid VLP-16 packet: block "
                                    << block << " header value is "
                                    << raw->blocks[block].header);
           return;                         // bad packet: skip the rest
@@ -582,8 +582,8 @@ namespace velodyne_rawdata
                                  << " to " << config_.frame_id);
                 tf_listener_->transformPoint(config_.frame_id, t_point, t_point);
               } catch (std::exception& ex) {
-                // only log tf error once every 100 times
-                ROS_WARN_THROTTLE(100, "%s", ex.what());
+                // only log tf error once every second
+                ROS_WARN_THROTTLE(LOG_PERIOD_, "%s", ex.what());
                 continue;                   // skip this point
               }
 
