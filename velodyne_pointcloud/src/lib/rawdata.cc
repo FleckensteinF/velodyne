@@ -173,8 +173,8 @@ namespace velodyne_rawdata
           }
           catch (std::exception& ex)
           {
-              // Only log tf error once every 100 times.
-              ROS_ERROR_STREAM_THROTTLE(100,
+              // Only log tf error maximum once every second.
+              ROS_ERROR_STREAM_THROTTLE(1,
                   "Failed to get sensor pose in point cloud frame: " << ex.what() << ".");
           }
       }
@@ -374,7 +374,7 @@ namespace velodyne_rawdata
       const raw_packet_t *raw = (const raw_packet_t *) &pkt.data[0];
 
       // Compute the time stamp of the beginning of the packet.
-      const float pkt_duration = 1.0e6 * BLOCKS_PER_PACKET * VLP16_BLOCK_TDURATION;
+      const float pkt_duration = 1.0e-6 * BLOCKS_PER_PACKET * VLP16_BLOCK_TDURATION;
       const ros::Time t_pkt_start(pkt.stamp - ros::Duration(pkt_duration));
 
       // Read the factory bytes to find out whether the sensor is in dual return mode.
@@ -547,8 +547,8 @@ namespace velodyne_rawdata
                   }
                   catch (std::exception& ex)
                   {
-                      // Only log tf error once every 100 times.
-                      ROS_ERROR_STREAM_THROTTLE(100,
+                      // Only log tf error maximum once every second.
+                      ROS_ERROR_STREAM_THROTTLE(1,
                           "Failed to get sensor pose in point cloud frame: " << ex.what() << ".");
                   }
               }
