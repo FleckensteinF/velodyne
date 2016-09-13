@@ -15,8 +15,6 @@
 
 #include "convert.h"
 
-#include <pcl_conversions/pcl_conversions.h>
-
 namespace velodyne_pointcloud
 {
   /** @brief Constructor. */
