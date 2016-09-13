@@ -350,7 +350,7 @@ namespace velodyne_rawdata
   {
     float azimuth;
     float azimuth_diff; // azimuth(N+2)-azimuth(N) with N ... number of firing in packet
-    float last_azimuth_diff;
+    float last_azimuth_diff = 0.0;
     float azimuth_corrected_f;
     int azimuth_corrected;
     float x, y, z;
