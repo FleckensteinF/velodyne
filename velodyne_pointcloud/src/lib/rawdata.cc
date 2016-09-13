@@ -568,10 +568,10 @@ namespace velodyne_rawdata
               const ros::Time t_pkt_start(pkt.stamp
                                           - ros::Duration(pkt_duration));
 
-              // If given transform listener, transform point from sensor frame
-              // to target frame.
+              // If given transform listener, transform every single point
+              // from sensor frame to target frame.
               geometry_msgs::PointStamped t_point;
-              t_point.header.stamp    = t_pkt_start + ros::Duration(t_beam*1.0e-6); // TODO Why add duration again?
+              t_point.header.stamp    = t_pkt_start + ros::Duration(t_beam*1.0e-6);
               t_point.header.frame_id = scanMsg->header.frame_id;
               t_point.point.x         = x_coord;
               t_point.point.y         = y_coord;
@@ -592,8 +592,8 @@ namespace velodyne_rawdata
               pc.at(col, row).z         = t_point.point.z;
               pc.at(col, row).intensity = (uint8_t)intensity;
             }
-          }
-        }
+          } // Iterate over beams
+        } // Iterate over firings
       }
     }
   }
