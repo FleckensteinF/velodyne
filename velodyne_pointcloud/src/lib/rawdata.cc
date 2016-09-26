@@ -137,7 +137,7 @@ namespace velodyne_rawdata
     pc.width  = scanMsg->packets.size() * SCANS_PER_PACKET / calibration_.num_lasers;
     pc.height = calibration_.num_lasers;
     VPoint nanPoint;
-    nanPoint.x = nanPoint.y = nanPoint.z = std::numeric_limits<float>::infinity();
+    nanPoint.x = nanPoint.y = nanPoint.z = std::numeric_limits<float>::quiet_NaN();
     nanPoint.intensity = 0u;
     nanPoint.ring = -1;
     pc.points.resize(pc.width * pc.height, nanPoint);
@@ -532,7 +532,7 @@ namespace velodyne_rawdata
 
               // Insert this point into the cloud.
               VPoint point;
-              point.x = point.y = point.z = std::numeric_limits<float>::infinity();
+              point.x = point.y = point.z = std::numeric_limits<float>::quiet_NaN();
               point.intensity = 0u;
               point.ring = corrections.laser_ring;
 
