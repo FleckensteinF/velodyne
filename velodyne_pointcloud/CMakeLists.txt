@@ -21,15 +21,17 @@ find_package(Boost COMPONENTS signals)
 # Resolve system dependency on yaml-cpp, which apparently does not
 # provide a CMake find_package() module.
 find_package(PkgConfig REQUIRED)
-pkg_check_modules(YAML_CPP REQUIRED yaml-cpp)
-find_path(YAML_CPP_INCLUDE_DIR
-          NAMES yaml_cpp.h
-          PATHS ${YAML_CPP_INCLUDE_DIRS})
-find_library(YAML_CPP_LIBRARY
-             NAMES YAML_CPP
-             PATHS ${YAML_CPP_LIBRARY_DIRS})
+#pkg_check_modules(YAML_CPP REQUIRED yaml-cpp)
+#find_path(YAML_CPP_INCLUDE_DIR
+#          NAMES yaml_cpp.h
+#          PATHS ${YAML_CPP_INCLUDE_DIRS})
+#find_library(YAML_CPP_LIBRARY
+#             NAMES YAML_CPP
 
-link_directories(${YAML_CPP_LIBRARY_DIRS})
+find_package(yaml-cpp REQUIRED)
+
+#PATHS ${YAML_CPP_LIBRARY_DIRS})
+#link_directories(${YAML_CPP_LIBRARY_DIRS})
 
 generate_dynamic_reconfigure_options(
   cfg/CloudNode.cfg cfg/TransformNode.cfg
@@ -45,7 +47,7 @@ include_directories(include ${catkin_INCLUDE_DIRS}
 
 catkin_package(
     CATKIN_DEPENDS ${${PROJECT_NAME}_CATKIN_DEPS}
-    DEPENDS yaml-cpp python-yaml
+    DEPENDS YAML_CPP# python-yaml
     INCLUDE_DIRS include
     LIBRARIES velodyne_rawdata)
 
